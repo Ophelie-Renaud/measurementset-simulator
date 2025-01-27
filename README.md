@@ -30,3 +30,5 @@ For questions or feedback, please contact:
 
 *This project is part of the ECLAT labcom hackathon.*
 
+<iframe src="https://github.com/Ophelie-Renaud/vis-generator/blob/main/wast.html" width="600" height="400"></iframe>
+
