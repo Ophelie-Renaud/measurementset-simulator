@@ -15,6 +15,10 @@ git clone https://gitlab.com/ska-telescope/sdp/ska-sdp-func-python.git
 cd ska-sdp-func-python
 pip install .
 cd..
+
+pip install python-casacore
+
+pip install notebook
 ```
 Then run the python notebook
 ```bash
