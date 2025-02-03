@@ -30,5 +30,5 @@ For questions or feedback, please contact:
 
 *This project is part of the ECLAT labcom hackathon.*
 
-<iframe src="https://ophelie-renaud.github.io/vis-generator/wast.html" width="600" height="400"></iframe>
+[![Demo](https://img.shields.io/badge/Live-Demo-blue)](https://ophelie-renaud.github.io/vis-generator/wast.html)
 
