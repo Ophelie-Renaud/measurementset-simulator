@@ -1,11 +1,15 @@
 <div align="center">
-  <table>
+  <table width="100%" border="0">
     <tr>
-      <td style="text-align: center; vertical-align: middle;"><strong>HACKATHON : 3-5/02/2025</strong></td>
-      <td style="text-align: center; vertical-align: middle;">
+      <td style="text-align: center; vertical-align: middle; width: 33%;">
+        <strong>HACKATHON : 3-5/02/2025</strong>
+      </td>
+      <td style="text-align: center; vertical-align: middle; width: 33%;">
         <img src="https://avalon.ens-lyon.fr/wp-content/uploads/2024/03/Eclat_ecusson.png" height="150">
       </td>
-      <td style="text-align: center; vertical-align: middle;"><strong>TEAM simulation</strong></td>
+      <td style="text-align: center; vertical-align: middle; width: 33%;">
+        <strong>TEAM simulation</strong>
+      </td>
     </tr>
   </table>
 </div>
