@@ -1,4 +1,18 @@
-# vis-generator
+<div align="center">
+  <table>
+    <tr>
+      <td style="text-align: center; vertical-align: middle;"><strong>HACKATHON : 3-5/02/2025</strong></td>
+      <td style="text-align: center; vertical-align: middle;">
+        <img src="https://avalon.ens-lyon.fr/wp-content/uploads/2024/03/Eclat_ecusson.png" height="150">
+      </td>
+      <td style="text-align: center; vertical-align: middle;"><strong>TEAM simulation</strong></td>
+    </tr>
+  </table>
+</div>
+
+
+
+# Generating distributed MeasurementSet
 
 ![](https://raw.githubusercontent.com/Ophelie-Renaud/vis-generator/refs/heads/main/proj.png)
 
