@@ -43,7 +43,18 @@ Then run the python notebook
 python notebook
 ```
 
+## Repository structure
 
+```plaintext
+├── SGRA_full_gt.fits        # Input image considered as the true sky  
+├── spectral_fits/           # Folder containing the image as a spectral cube  
+│   ├── *.fits  
+├── instrumented_vis_fits/   # Folder containing visibilities with instrument noise  
+│   ├── *.fits  
+├── spectral_ms/             # Folder containing the distributed MeasurementSet  
+│   ├── *.ms  
+├── fits_to_vis.ipynb        # Notebook to generate all files from the input image  
+```
 
 ## Contact  
 
