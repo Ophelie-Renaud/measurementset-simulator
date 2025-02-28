@@ -83,13 +83,13 @@ This hackathon comprises 2 phases:
 ```mermaid
 gantt
     title Plan
-    dateFormat  DD-MM
+    dateFormat  YYYY-MM-DD
     axisFormat  %d %b
     section Hackathon
-    Phase 1 :done, 3-02, 5-02
-    Distributed MS:milestone,5-02
-    Phase 2 :active, 3-06, 5-06
-    Nénufar MS :milestone, 3-06, 5-06
+    Phase 1 :done, 2025-02-03, 2025-02-05
+    MS generation: milestone, 2025-02-05
+    Phase 2 :active, 2025-06-03, 2025-06-05
+    Distributed MS : milestone, 2025-06-05
 ```
 
 ## Contact  
