@@ -26,15 +26,24 @@ Radio interferometric imaging uses interferometers to measure visibilities, whic
 
 By combining these two loops, it is possible to obtain an accurate image of the sky from the raw data provided by the interferometer.
 
-<video width="300" controls>
-  <source src="https://github.com/Ophelie-Renaud/vis-generator/blob/main/pic/animation.mp4?raw=true" type="video/mp4">
-</video>
+<div align="center">
+  <table width="100%" border="0">
+    <tr>
+      <td style="text-align: center; vertical-align: middle; width: 33%;">
+        <img src="https://github.com/Ophelie-Renaud/vis-generator/blob/main/pic/image2.jpg?raw=true" height="150">
+      </td>
+      <td style="text-align: center; vertical-align: middle; width: 33%;">
+        <img src="https://github.com/Ophelie-Renaud/vis-generator/blob/main/pic/image2.jpg?raw=true" height="150">
+      </td>
+    </tr>
+  </table>
+</div>
 
-Most interferometric imagers (ddfacet, sep, generic imaging pipeline etc) take a `MeasurementSet` *.ms file as input and generate an image as output. The most commonly used format is `Flexible Image Transport System (FITS)` *.fits.
+Most interferometric imagers (ddfacet, sep, generic imaging pipeline etc) take a [MeasurementSet](https://casa.nrao.edu/Memos/229.html) *.ms file as input and generate an image as output. The most commonly used format is [Flexible Image Transport System (FITS)](https://www.aanda.org/articles/aa/abs/2010/16/aa15362-10/aa15362-10.html) *.fits.
 
 #### Project motivation
 
-As we are keen to benchmark the performance of our pipelines over a wide range of case studies, and as we don't have access to telescopes, we are going to generate our own measurementSet on which we will have control over the configuration of the instruments and the image of the true sky. 
+As we are keen to benchmark the performance of our pipelines over a wide range of case studies, and as we don't have access to telescopes, we are going to generate our own `MeasurementSet` on which we will have control over the configuration of the instruments and the image of the true sky. 
 
 
 
