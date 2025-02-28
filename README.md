@@ -29,10 +29,10 @@ By combining these two loops, it is possible to obtain an accurate image of the 
 <div align="center">
   <table width="100%" border="0">
     <tr>
-      <td style="text-align: center; vertical-align: middle; width: 33%;">
+      <td style="text-align: center; vertical-align: middle; width: 50%;">
         <img src="https://github.com/Ophelie-Renaud/vis-generator/blob/main/pic/image2.jpg?raw=true" height="150">
       </td>
-      <td style="text-align: center; vertical-align: middle; width: 33%;">
+      <td style="text-align: center; vertical-align: middle; width: 50%;">
         <img src="https://github.com/Ophelie-Renaud/vis-generator/blob/main/pic/image3.jpg?raw=true" height="150">
       </td>
     </tr>
@@ -48,7 +48,7 @@ As we are keen to benchmark the performance of our pipelines over a wide range o
 
 
 
-![](https://raw.githubusercontent.com/Ophelie-Renaud/vis-generator/refs/heads/main/proj.png)
+![](https://raw.githubusercontent.com/Ophelie-Renaud/vis-generator/refs/heads/main/pic/proj.png)
 
 This project aim to create `visibilities.ms` from `output.fits` image which correspond to the reverse steps of standard radio-astronomy imaging pipeline. All the process are contained in the notebook except the `ska_sdp_datamodels`  and  `ska-sdp-func-python` install them before benefiting from this project.
 
