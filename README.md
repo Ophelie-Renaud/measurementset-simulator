@@ -33,11 +33,12 @@ By combining these two loops, it is possible to obtain an accurate image of the 
         <img src="https://github.com/Ophelie-Renaud/vis-generator/blob/main/pic/image2.jpg?raw=true" height="150">
       </td>
       <td style="text-align: center; vertical-align: middle; width: 33%;">
-        <img src="https://github.com/Ophelie-Renaud/vis-generator/blob/main/pic/image2.jpg?raw=true" height="150">
+        <img src="https://github.com/Ophelie-Renaud/vis-generator/blob/main/pic/image3.jpg?raw=true" height="150">
       </td>
     </tr>
   </table>
 </div>
+
 
 Most interferometric imagers (ddfacet, sep, generic imaging pipeline etc) take a [MeasurementSet](https://casa.nrao.edu/Memos/229.html) *.ms file as input and generate an image as output. The most commonly used format is [Flexible Image Transport System (FITS)](https://www.aanda.org/articles/aa/abs/2010/16/aa15362-10/aa15362-10.html) *.fits.
 
