@@ -26,10 +26,10 @@ Radio interferometric imaging uses interferometers to measure visibilities, whic
 
 By combining these two loops, it is possible to obtain an accurate image of the sky from the raw data provided by the interferometer.
 
-
 <video width="300" controls>
-  <source src="/home/orenaud/Desktop/test/test/animation.mp4" type="video/mp4">
+  <source src="https://github.com/Ophelie-Renaud/vis-generator/blob/main/pic/animation.mp4?raw=true" type="video/mp4">
 </video>
+
 Most interferometric imagers (ddfacet, sep, generic imaging pipeline etc) take a `MeasurementSet` *.ms file as input and generate an image as output. The most commonly used format is `Flexible Image Transport System (FITS)` *.fits.
 
 #### Project motivation
