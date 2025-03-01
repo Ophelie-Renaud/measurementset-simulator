@@ -110,6 +110,7 @@ For questions or feedback, please contact:
 ## References
 
 The notebook employ SKA SDP libraries:
+
 📂 [ska-sdp-func-python git](https://gitlab.com/ska-telescope/sdp/ska-sdp-func-python)
 
 📘 [ska-sdp-func-python doc](https://developer.skao.int/projects/ska-sdp-func-python/en/latest/)
