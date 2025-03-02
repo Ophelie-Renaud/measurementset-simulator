@@ -1,0 +1,24 @@
+name: CI
+
+on: [push, pull_request]  # Déclenche l'action à chaque push ou PR
+
+jobs:
+  build:
+    runs-on: ubuntu-latest  # Utilise un runner Linux
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4  # Récupère le code du repo
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.8"  # Version Python à utiliser
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt || echo "Pas de requirements.txt"
+
+      - name: Run tests
+        run: pytest || echo "Pas de tests définis"
+

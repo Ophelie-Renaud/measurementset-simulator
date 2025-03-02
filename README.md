@@ -14,11 +14,13 @@
   </table>
 </div>
 
-
-
 # Generating distributed MeasurementSet
 
+![GitHub repo size](https://img.shields.io/github/repo-size/Ophelie-Renaud/vis-generator) ![GitHub last commit](https://img.shields.io/github/last-commit/Ophelie-Renaud/vis-generator) ![GitHub issues](https://img.shields.io/github/issues/Ophelie-Renaud/vis-generator) ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/Ophelie-Renaud/vis-generator/ci.yml?branch=main)
+
+
 #### Interferometric context
+
 Radio interferometric imaging uses interferometers to measure visibilities, which are samples of the sky obtained from pairs of antennas. To transform these visibilities into an image of the sky, imaging algorithms generally use two main steps: a major loop (∆) and a minor loop (Ψ).
 
 - The major loop (∆) manages the transformation of the visibilities into a *dirty* image of the sky via gridding and screening operations. `Gridding` consists of projecting the visibilities onto a regular grid in the *uv* plane in order to facilitate the application of the Fast Fourier Transform (FFT) to generate a dirty image. `Degridding` performs the opposite operation, comparing the visibilities calculated from an image model and adjusting them accordingly. 
