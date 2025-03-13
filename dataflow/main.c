@@ -201,7 +201,7 @@ int main(void) {
 
 	const char *image = "image.csv";
 
-	int GRID_SIZE = 2560;
+	int GRID_SIZE = 2048;
 	int NUM_VISIBILITIES = 3924480;
 	int NUM_KERNEL = 17;
 	int TOTAL_KERNEL_SAMPLES = 108800;
