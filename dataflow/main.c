@@ -90,12 +90,14 @@ void std_degridding(int GRID_SIZE, int NUM_VISIBILITIES, int NUM_KERNELS, int TO
 		output_visibilities[i].x = input_grid[idx].x;
 		output_visibilities[i].y = input_grid[idx].y;
 	}
+	printf("UPDATE >>> Image degridded successfully\n");
 }
 
 
 void load_image_from_file(PRECISION *image, const char *file_name, int start_x, int start_y, int range_x, int range_y) {
 	FILE *f = fopen(file_name, "r");
 	if (f == NULL) {
+		perror(">>> ERROR");
 		printf(">>> ERROR: Unable to open file %s...\n\n", file_name);
 		return;
 	}
@@ -133,16 +135,16 @@ void convert_image_to_grid(PRECISION* final_image, PRECISION2* input_grid, int i
 
 			// Initialisation d'un 'float2' à partir de la valeur de final_image
 			input_grid[y * grid_size + x].x = final_image[img_y * image_size + img_x];  // La première composante
-			input_grid[y * grid_size + x].y = 0;  // La deuxième composante
+			input_grid[y * grid_size + x].y = final_image[img_y * image_size + img_x];  // La deuxième composante
 		}
 	}
 
 	printf("UPDATE >>> Image converted to grid (input_grid) successfully\n");
 }
-void save_image_to_file(Config *config, PRECISION *image, const char *file_name, int start_x, int start_y, int range_x, int range_y, int cycle)
+void save_image_to_file(Config *config, PRECISION *image, const char *file_name, int start_x, int start_y, int range_x, int range_y)
 {
 	char buffer[256];
-	snprintf(buffer,255,"%scycle_%d_%s",config->output_path,cycle,file_name);
+	snprintf(buffer,255,"%s%s",config->output_path,file_name);
 	printf("UPDATE >>> Attempting to save image to %s... \n\n", buffer);
 
 	//MD5_Update(sizeof(PRECISION) * range_x * range_y, image);
@@ -172,12 +174,32 @@ void save_image_to_file(Config *config, PRECISION *image, const char *file_name,
 	fclose(f);
 }
 
-int main(int argc, char *argv[]) {
-    if (argc < 2) {
-        fprintf(stderr, "Usage: %s <csv_path>\n", argv[0]);
-        return 1;
-    }
-	const char *image = argv[1];
+void convert_vis_to_csv(int NUM_VISIBILITIES,PRECISION2* output_visibilities, PRECISION3* corrected_vis_uvw_coords,Config *config) {
+	FILE* file = fopen(config->visibility_source_file, "w");
+	if (file == NULL) {
+		perror("Erreur lors de l'ouverture du fichier");
+		return;
+	}
+
+	// Écrire le nombre de visibilités dans la première ligne
+	fprintf(file, "%d\n", NUM_VISIBILITIES);
+
+	// Écrire les visibilités u, v, real, imag dans le fichier CSV
+	for (int i = 0; i < NUM_VISIBILITIES; i++) {
+		fprintf(file, "%.6f %.6f %.6f %.6f 1\n",
+				corrected_vis_uvw_coords[i].x,
+				corrected_vis_uvw_coords[i].y,
+				output_visibilities[i].x,
+				output_visibilities[i].y);
+	}
+
+	// Fermer le fichier
+	fclose(file);
+}
+
+int main(void) {
+
+	const char *image = "image.csv";
 
 	int GRID_SIZE = 2560;
 	int NUM_VISIBILITIES = 3924480;
@@ -190,11 +212,16 @@ int main(int argc, char *argv[]) {
 	int2* kernel_supports = (int2*)malloc(sizeof(int2) * NUM_KERNEL);
 	PRECISION2* input_grid = (PRECISION2*)malloc(sizeof(PRECISION2) * GRID_SIZE * GRID_SIZE);
 	PRECISION3* vis_uvw_coords = (PRECISION3*)malloc(sizeof(PRECISION3) * NUM_VISIBILITIES);
+	for (int i = 0; i < NUM_VISIBILITIES; ++i) {
+		vis_uvw_coords[i].x = (float)(rand() % 60001) - 30000;  // Aléatoire entre -30000 et 30000
+		vis_uvw_coords[i].y = (float)(rand() % 60001) - 30000;  // Aléatoire entre -30000 et 30000
+		vis_uvw_coords[i].z = (float)(rand() % 60001) - 30000;  // Aléatoire entre -30000 et 30000
+	}
 	PRECISION3* corrected_vis_uvw_coords = (PRECISION3*)malloc(sizeof(PRECISION3) * NUM_VISIBILITIES);
 	for (int i = 0; i < NUM_VISIBILITIES; ++i) {
-		corrected_vis_uvw_coords[i].x = 0;
-		corrected_vis_uvw_coords[i].y = 0;
-		corrected_vis_uvw_coords[i].z = 0;
+		corrected_vis_uvw_coords[i].x = 0;  // Aléatoire entre -30000 et 30000
+		corrected_vis_uvw_coords[i].y = 0;  // Aléatoire entre -30000 et 30000
+		corrected_vis_uvw_coords[i].z = 0;  // Aléatoire entre -30000 et 30000
 	}
 
 	int* num_corrected_visibilities = (int*)malloc(sizeof(int) * 1);
@@ -212,9 +239,11 @@ int main(int argc, char *argv[]) {
 	config.weak_source_percent_img = 0;
 	//config.psf_max_value = 1.f;
 	config.visibility_source_file = "vis.csv";
-	config.output_path = "/path";
-	config.final_image_output = image;
-
+	config.output_path = "";
+	config.final_image_output = "image.csv";
+	config.degridding_kernel_support_file = "config/wproj_manualconj_degridding_kernel_supports_x16.csv";
+	config.degridding_kernel_imag_file = "config/wproj_manualconj_degridding_kernels_imag_x16.csv";
+	config.degridding_kernel_real_file= "config/wproj_manualconj_degridding_kernels_real_x16.csv";
 
 
 	load_image_from_file( final_image, config.final_image_output, 0, 0, GRID_SIZE, GRID_SIZE);
@@ -231,9 +260,8 @@ int main(int argc, char *argv[]) {
 
 	std_degridding(GRID_SIZE, NUM_VISIBILITIES, NUM_KERNEL, TOTAL_KERNEL_SAMPLES,OVERSAMPLING_FACTOR, kernels, kernel_supports, input_grid,vis_uvw_coords, num_corrected_visibilities, &config, output_visibilities);
 
-	// faut mettre output dans config.visibility_source_file
 
-	save_image_to_file(&config, final_image, config.visibility_source_file, 0, 0, GRID_SIZE, GRID_SIZE, 0);
+	convert_vis_to_csv(NUM_VISIBILITIES,output_visibilities, vis_uvw_coords, &config);
 
 	return 0;
 }

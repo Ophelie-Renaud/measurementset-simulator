@@ -325,8 +325,10 @@ void degridding_kernel_host_set_up(int NUM_KERNELS, int TOTAL_KERNEL_SAMPLES, IN
 
 	FILE *kernel_support_file = fopen(config->degridding_kernel_support_file,"r");
 
-	if(kernel_support_file == NULL)
+	if (kernel_support_file == NULL) {
+		printf("ERROR: Unable to open kernel support file %s\n", config->degridding_kernel_support_file);
 		exit(EXIT_FAILURE);
+	}
 
 	int total_kernel_samples = 0;
 
@@ -349,12 +351,15 @@ void degridding_kernel_host_set_up(int NUM_KERNELS, int TOTAL_KERNEL_SAMPLES, IN
 
 	//now load kernels into CPU memory
 	FILE *kernel_real_file = fopen(config->degridding_kernel_real_file, "r");
+
+	if (kernel_real_file == NULL) {
+		printf("ERROR: Unable to open real kernel file %s\n", config->degridding_kernel_real_file);
+		exit(EXIT_FAILURE);
+	}
 	FILE *kernel_imag_file = fopen(config->degridding_kernel_imag_file, "r");
 
-	if(!kernel_real_file || !kernel_imag_file)
-	{
-		if(kernel_real_file) fclose(kernel_real_file);
-		if(kernel_imag_file) fclose(kernel_imag_file);
+	if (kernel_imag_file == NULL) {
+		printf("ERROR: Unable to open imaginary kernel file %s\n", config->degridding_kernel_imag_file);
 		exit(EXIT_FAILURE);
 	}
 

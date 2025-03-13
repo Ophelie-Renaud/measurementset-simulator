@@ -52,7 +52,13 @@ As we are keen to benchmark the performance of our pipelines over a wide range o
 
 ![](https://raw.githubusercontent.com/Ophelie-Renaud/vis-generator/refs/heads/main/pic/proj.png)
 
-This project aim to create `visibilities.ms` from `output.fits` image which correspond to the reverse steps of standard radio-astronomy imaging pipeline. All the process are contained in the notebook except the `ska_sdp_datamodels`  and  `ska-sdp-func-python` install them before benefiting from this project.
+This project aim to create `visibilities.ms` from `output.fits` image which correspond to the reverse steps of standard radio-astronomy imaging pipeline. 
+
+This project contains two implementation of the MS simulator:
+
+#### Python-based simulator (SKAO library)
+
+All the process are contained in the notebook `distributed_ms_from_fits_rascil` except the `ska_sdp_datamodels`  and  `ska-sdp-func-python` install them before benefiting from this project.
 
 ```bash
 git clone https://gitlab.com/ska-telescope/sdp/ska-sdp-datamodels.git
@@ -74,6 +80,16 @@ Then run the python notebook
 ```bash
 jupyter notebook
 ```
+#### Dataflow-based simulator
+
+All the process are contained in the notebook `ms_from_fits_dataflow` .
+```bash
+cd dataflow/
+cmake .
+make
+cd ..
+jupyter notebook
+```
 
 ## Repository structure
 
@@ -81,11 +97,10 @@ jupyter notebook
 ├── SGRA_full_gt.fits        # Input image considered as the true sky  
 ├── spectral_fits/           # Folder containing the image as a spectral cube  
 │   ├── *.fits  
-├── instrumented_vis_fits/   # Folder containing visibilities with instrument noise  
-│   ├── *.fits  
 ├── spectral_ms/             # Folder containing the distributed MeasurementSet  
 │   ├── *.ms  
-├── fits_to_vis.ipynb        # Notebook to generate all files from the input image  
+├── distributed_ms_from_fits_rascil.ipynb        # SKAO python based notebook
+├── ms_from_fits_dataflow.ipynb        # dataflow C based notebook
 ```
 ## Planning
 This hackathon comprises 2 phases:
@@ -111,7 +126,7 @@ For questions or feedback, please contact:
 
 ## References
 
-The notebook employ SKA SDP libraries:
+The `distributed_ms_from_fits_rascil` notebook employ SKAO SDP libraries:
 
 📂 [ska-sdp-func-python git](https://gitlab.com/ska-telescope/sdp/ska-sdp-func-python)
 

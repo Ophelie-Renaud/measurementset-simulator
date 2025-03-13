@@ -67,15 +67,15 @@ build CMakeFiles/STD_DEGRID.dir/top.c.o: C_COMPILER__STD_DEGRID_unscanned_Debug 
 
 
 #############################################
-# Link the executable STD_DEGRID
+# Link the executable /home/orenaud/Documents/GITHUB/VIS/vis-generator/dataflow/STD_DEGRID
 
-build STD_DEGRID: C_EXECUTABLE_LINKER__STD_DEGRID_Debug CMakeFiles/STD_DEGRID.dir/main.c.o CMakeFiles/STD_DEGRID.dir/top.c.o
+build /home/orenaud/Documents/GITHUB/VIS/vis-generator/dataflow/STD_DEGRID: C_EXECUTABLE_LINKER__STD_DEGRID_Debug CMakeFiles/STD_DEGRID.dir/main.c.o CMakeFiles/STD_DEGRID.dir/top.c.o
   FLAGS = -g
   LINK_LIBRARIES = -lm
   OBJECT_DIR = CMakeFiles/STD_DEGRID.dir
   POST_BUILD = :
   PRE_LINK = :
-  TARGET_FILE = STD_DEGRID
+  TARGET_FILE = /home/orenaud/Documents/GITHUB/VIS/vis-generator/dataflow/STD_DEGRID
   TARGET_PDB = STD_DEGRID.dbg
 
 
@@ -104,6 +104,8 @@ build rebuild_cache: phony CMakeFiles/rebuild_cache.util
 # =============================================================================
 # Target aliases.
 
+build STD_DEGRID: phony /home/orenaud/Documents/GITHUB/VIS/vis-generator/dataflow/STD_DEGRID
+
 # =============================================================================
 # Folder targets.
 
@@ -112,7 +114,7 @@ build rebuild_cache: phony CMakeFiles/rebuild_cache.util
 #############################################
 # Folder: /home/orenaud/Documents/GITHUB/VIS/vis-generator/dataflow/cmake-build-debug
 
-build all: phony STD_DEGRID
+build all: phony /home/orenaud/Documents/GITHUB/VIS/vis-generator/dataflow/STD_DEGRID
 
 # =============================================================================
 # Built-in targets
