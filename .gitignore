@@ -1,7 +1,7 @@
 ska-sdp-datamodels/
 ska-sdp-func-python/
-spectral_fits/*.fits
-spectral_ms/*.ms
+skao_lib_simulator/spectral_fits/*.fits
+skao_lib_simulator/spectral_ms/*.ms
 example/*.csv
-dataflow/*.csv
-dataflow/*.fits
+dataflow_simulator/code/*.csv
+dataflow_simulator/code/*.fits

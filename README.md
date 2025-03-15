@@ -58,7 +58,7 @@ This project contains two implementation of the MS simulator:
 
 #### Python-based simulator (SKAO library)
 
-All the process are contained in the notebook `distributed_ms_from_fits_rascil` except the `ska_sdp_datamodels`  and  `ska-sdp-func-python` install them before benefiting from this project.
+This simulator is based on **RASCIL** degridder and **SKAO SDP** libraries. It allow to generate distributed measurementSet from a given true sky image considering interferometer configuration such as the MEERKAT telescope among others. All the process are contained in the notebook `distributed_ms_from_fits_rascil` except the `ska_sdp_datamodels`  and  `ska-sdp-func-python` install them before benefiting from this project.
 
 ```bash
 git clone https://gitlab.com/ska-telescope/sdp/ska-sdp-datamodels.git
@@ -75,16 +75,17 @@ cd..
 pip install python-casacore
 
 pip install notebook
-```
-Then run the python notebook
-```bash
+
 jupyter notebook
 ```
 #### Dataflow-based simulator
 
-All the process are contained in the notebook `ms_from_fits_dataflow` .
+This simulator is based on a standard dataflow degridder used in the **Generic Imaging Pipeline (GIP)** and the **SDP evolutionary pipeline (SEP)**. It allow to generate visibilities from a custom true sky image. 
+
+Parameterized implementations of the GIP has been proposed in this repository: [![GitHub Repo](https://img.shields.io/badge/GitHub-Repository-181717?logo=github&style=for-the-badge)](https://github.com/Ophelie-Renaud/simsdp-generic-imaging-pipeline)*(submitted to GRETSI 2025)* . This result in a parametric executable: `./Pipeline <NUM_VIS> <GRID_SIZE> <NUM_MINOR_CYCLE>`. This assumes that the true sky image is also parametric, which is the purpose of this simulator.  These two parametric components will allow to facilitate algorithm exploration to identify the parameters and configuration that block the scaling on HPC systems.  All the process are contained in the notebook `ms_from_fits_dataflow` executing the parametric executable.
+
 ```bash
-cd dataflow/
+cd dataflow_simulator/code/
 cmake .
 make
 cd ..
@@ -94,18 +95,23 @@ jupyter notebook
 ## Repository structure
 
 ```plaintext
-├── SGRA_full_gt.fits        # Input image considered as the true sky  
-├── spectral_fits/           # Folder containing the image as a spectral cube  
-│   ├── *.fits  
-├── spectral_ms/             # Folder containing the distributed MeasurementSet  
-│   ├── *.ms  
-├── distributed_ms_from_fits_rascil.ipynb        # SKAO python based notebook
-├── ms_from_fits_dataflow.ipynb        # dataflow C based notebook
+├── dataflow_simulator/  
+	├── code/ #single thread dataflow based code in C
+	├──	ms_from_fits_dataflow.ipynb # notebook to convert custom fits to visisbilty
+├── doc/  # slides
+├── example/  # image example
+├── pic/  # project description pictures
+├── skao_lib_simulator/ 
+	├── spectral_fits/ # generated spectral fits
+	├── spectral_ms/ # generated spectral ms*
+	├── distributed_ms_from_fits_rascil.ipynb # notebook to convert given fits into spectral fits into distributed ms
+	├──RP1C_transit.py # casacore based script to check ms validity
+
 ```
 ## Planning
 This hackathon comprises 2 phases:
-- Phase 1: getting to grips with the SKA SDP libraries, generation of the first MS, and first test as ddfacet input.
-- Phase 2: generation of distributed and configurable MS, validation via casacore.
+- Phase 1: getting to grips with the SKA SDP libraries, generation of distributed MS, first test as ddfacet input, validation via casacore.
+- Phase 2: generation of configurable MS, test as GIP input.
 
 ```mermaid
 gantt
@@ -141,6 +147,11 @@ The `distributed_ms_from_fits_rascil` notebook employ SKAO SDP libraries:
 📘 [rascil doc](https://developer.skao.int/projects/rascil/en/latest/index.html)
 
 🔗 [CASA](https://casadocs.readthedocs.io/en/stable/notebooks/synthesis_imaging.html) --> section **Types of images** for the various spectral distribution
+
+
+
+The  `ms_from_fits_dataflow`  notebook employ the std_degridding dataflow implementation.
+:page_facing_up: [Generic imaging pipeline](https://hal.science/hal-04361151/file/paper_dasip24_5_wang_updated-2.pdf): *S. Wang, N. Gac, H. Miomandre, J.-F. Nezan, K. Desnos, F. Orieux « An Initial Framework for Prototyping Radio-Interferometric Imaging Pipelines»*.
 
 ## Acknowledge
 
