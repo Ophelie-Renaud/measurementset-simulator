@@ -58,7 +58,9 @@ This project contains two implementation of the MS simulator:
 
 #### Python-based simulator (SKAO library)
 
-This simulator is based on **RASCIL** degridder and **SKAO SDP** libraries. It allow to generate distributed measurementSet from a given true sky image considering interferometer configuration such as the MEERKAT telescope among others. All the process are contained in the notebook `distributed_ms_from_fits_rascil` except the `ska_sdp_datamodels`  and  `ska-sdp-func-python` install them before benefiting from this project.
+This simulator is based on **RASCIL** degridder and **SKAO SDP** libraries. It allow to generate distributed measurementSet from a given true sky image considering interferometer configuration such as the MEERKAT telescope among others. 
+
+📌 All the process are contained in the notebook `distributed_ms_from_fits_rascil` except the `ska_sdp_datamodels`  and  `ska-sdp-func-python` install them before benefiting from this project.
 
 ```bash
 git clone https://gitlab.com/ska-telescope/sdp/ska-sdp-datamodels.git
@@ -82,7 +84,9 @@ jupyter notebook
 
 This simulator is based on a standard dataflow degridder used in the **Generic Imaging Pipeline (GIP)** and the **SDP evolutionary pipeline (SEP)**. It allow to generate visibilities from a custom true sky image. 
 
-Parameterized implementations of the GIP has been proposed in this repository: [![GitHub Repo](https://img.shields.io/badge/GitHub-Repository-181717?logo=github&style=for-the-badge)](https://github.com/Ophelie-Renaud/simsdp-generic-imaging-pipeline)*(submitted to GRETSI 2025)* . This result in a parametric executable: `./Pipeline <NUM_VIS> <GRID_SIZE> <NUM_MINOR_CYCLE>`. This assumes that the true sky image is also parametric, which is the purpose of this simulator.  These two parametric components will allow to facilitate algorithm exploration to identify the parameters and configuration that block the scaling on HPC systems.  All the process are contained in the notebook `ms_from_fits_dataflow` executing the parametric executable.
+Parameterized implementations of the GIP has been proposed in this repository: ➡️ **[simsdp-generic-imaging-pipeline](https://github.com/Ophelie-Renaud/simsdp-generic-imaging-pipeline)** *(submitted to GRETSI 2025)* . This result in a parametric executable: `./Pipeline <NUM_VIS> <GRID_SIZE> <NUM_MINOR_CYCLE>`. This assumes that the true sky image is also parametric, which is the purpose of this simulator.  These two parametric components will allow to facilitate algorithm exploration to identify the parameters and configuration that block the scaling on HPC systems.  
+
+📌 All the process are contained in the notebook `ms_from_fits_dataflow` executing the parametric executable.
 
 ```bash
 cd dataflow_simulator/code/
@@ -150,8 +154,9 @@ The `distributed_ms_from_fits_rascil` notebook employ SKAO SDP libraries:
 
 
 
-The  `ms_from_fits_dataflow`  notebook employ the std_degridding dataflow implementation.
-:page_facing_up: [Generic imaging pipeline](https://hal.science/hal-04361151/file/paper_dasip24_5_wang_updated-2.pdf): *S. Wang, N. Gac, H. Miomandre, J.-F. Nezan, K. Desnos, F. Orieux « An Initial Framework for Prototyping Radio-Interferometric Imaging Pipelines»*.
+The  `ms_from_fits_dataflow`  notebook employ the std_degridding dataflow implementation:
+
+📄 [Generic imaging pipeline](https://hal.science/hal-04361151/file/paper_dasip24_5_wang_updated-2.pdf): *S. Wang, N. Gac, H. Miomandre, J.-F. Nezan, K. Desnos, F. Orieux « An Initial Framework for Prototyping Radio-Interferometric Imaging Pipelines»*.
 
 ## Acknowledge
 
