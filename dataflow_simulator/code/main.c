@@ -16,7 +16,7 @@ PRECISION2 complex_mult(const PRECISION2 z1, const PRECISION2 z2)
 }
 
 void std_degridding(int GRID_SIZE, int NUM_VISIBILITIES, int NUM_KERNELS, int TOTAL_KERNEL_SAMPLES, int OVERSAMPLING_FACTOR, PRECISION2* kernels,
-		int2* kernel_supports, PRECISION2* input_grid, PRECISION3* corrected_vis_uvw_coords, int* num_corrected_visibilities, Config* config,
+		int2* kernel_supports, PRECISION2* input_grid, PRECISION3* vis_uvw_coords, int* num_corrected_visibilities, Config* config,
 		PRECISION2* output_visibilities){
 	printf("Degridding visibilities using FFT degridder\n");
 
@@ -26,7 +26,8 @@ void std_degridding(int GRID_SIZE, int NUM_VISIBILITIES, int NUM_KERNELS, int TO
 
 	for(int i = 0; i < *num_corrected_visibilities; ++i){
 		// Calcul de l'indice w basé sur la coordonnée z des visibilités corrigées
-		int w_idx = (int)(SQRT(ABS(corrected_vis_uvw_coords[i].z * config->w_scale)) + 0.5);
+		int w_idx = (int)(SQRT(ABS(vis_uvw_coords[i].z * config->w_scale)) + 0.5);
+		// we don't care first on w
 		w_idx = 0;
 
 		// Récupère l'épaisseur du noyau et le décalage pour le plan w
@@ -34,11 +35,11 @@ void std_degridding(int GRID_SIZE, int NUM_VISIBILITIES, int NUM_KERNELS, int TO
 		int w_offset = kernel_supports[w_idx].y;
 
 		// Calcul de la position sur la grille à partir des coordonnées UV
-		PRECISION2 grid_pos = {.x = corrected_vis_uvw_coords[i].x * config->uv_scale, .y = corrected_vis_uvw_coords[i].y * config->uv_scale};
+		PRECISION2 grid_pos = {.x = vis_uvw_coords[i].x * config->uv_scale, .y = vis_uvw_coords[i].y * config->uv_scale};
 		printf("i: %d, grid_pos: (%f, %f)\n", i, grid_pos.x, grid_pos.y);
 
 		// Détermine si la visibilité doit être conjuguée selon la coordonnée z
-		PRECISION conjugate = (corrected_vis_uvw_coords[i].z < 0.0) ? -1.0 : 1.0;
+		PRECISION conjugate = (vis_uvw_coords[i].z < 0.0) ? -1.0 : 1.0;
 
 		// Initialisation de la norme des coefficients du noyau pour la normalisation
 		float comm_norm = 0.f;
@@ -79,8 +80,6 @@ void std_degridding(int GRID_SIZE, int NUM_VISIBILITIES, int NUM_KERNELS, int TO
 
 				// Récupère l'échantillon du noyau et applique la conjugaison si nécessaire
 				PRECISION2 kernel_sample = kernels[k_idx];
-
-
 
 				kernel_sample.y *= conjugate;
 
@@ -153,7 +152,7 @@ void load_image_from_file(PRECISION2 *input_grid, const char *file_name) {
 
 
 
-void convert_vis_to_csv(int NUM_VISIBILITIES,PRECISION2* output_visibilities, PRECISION3* corrected_vis_uvw_coords,Config *config) {
+void convert_vis_to_csv(int NUM_VISIBILITIES, PRECISION2* output_visibilities, PRECISION3* corrected_vis_uvw_coords, Config *config) {
 	FILE* file = fopen(config->visibility_source_file, "w");
 	if (file == NULL) {
 		perror("Erreur lors de l'ouverture du fichier");
@@ -163,26 +162,33 @@ void convert_vis_to_csv(int NUM_VISIBILITIES,PRECISION2* output_visibilities, PR
 	// Écrire le nombre de visibilités dans la première ligne
 	fprintf(file, "%d\n", NUM_VISIBILITIES);
 
-	// Écrire les visibilités u, v, real, imag dans le fichier CSV
 	for (int i = 0; i < NUM_VISIBILITIES; i++) {
-		// Assurez-vous que les champs sont correctement initialisés
+		// Vérification des valeurs NaN
 		if (isnan(corrected_vis_uvw_coords[i].x) || isnan(corrected_vis_uvw_coords[i].y) || isnan(corrected_vis_uvw_coords[i].z) ||
 			isnan(output_visibilities[i].x) || isnan(output_visibilities[i].y)) {
 			fprintf(stderr, "Erreur : des données invalides (NaN) rencontrées à l'index %d.\n", i);
-			continue; // Ou gérer l'erreur selon le besoin
+			fclose(file);
+			exit(EXIT_FAILURE);
 			}
-		// Écrire les données dans le fichier
-		fprintf(file, "%.6f %.6f %.6f %.6f %.6f 1\n",
-				corrected_vis_uvw_coords[i].x,
-				corrected_vis_uvw_coords[i].y,
-				corrected_vis_uvw_coords[i].z,
-				output_visibilities[i].x,
-				output_visibilities[i].y);
+
+		// Écriture des données dans le fichier CSV
+		if (fprintf(file, "%.6f %.6f %.6f %.6f %.6f 1\n",
+					corrected_vis_uvw_coords[i].x,
+					corrected_vis_uvw_coords[i].y,
+					corrected_vis_uvw_coords[i].z,
+					output_visibilities[i].x,
+					output_visibilities[i].y) < 0) {
+			perror("Erreur lors de l'écriture dans le fichier");
+			fclose(file);
+			exit(EXIT_FAILURE);
+					}
 	}
 
-	// Fermer le fichier
 	fclose(file);
+
+	printf("UPDATE >>> write csv to %s\n", config->visibility_source_file);
 }
+
 
 
 void vis_coord_set_up(int NUM_VISIBILITIES, int GRID_SIZE, PRECISION3* vis_uvw_coords, Config *config) {
@@ -215,60 +221,50 @@ void vis_coord_set_up(int NUM_VISIBILITIES, int GRID_SIZE, PRECISION3* vis_uvw_c
 
 int main(void) {
 
-	// dimension du csv (depuis le .fits)
-	int RANG_X = 512;
-	int RANG_Y = 512;
+	int FOV_DEGREES = 1; //champs de vue
 
 	int NUM_RECEIVERS = 5;
 	int NUM_BASELINE = NUM_RECEIVERS*(NUM_RECEIVERS-1)/2;
 	int OVERSAMPLING_FACTOR = 16;
 	int GRID_SIZE = 512;
 
+
 	// si y'a plus de vis que de taille d'image d'entré ça couvre tout le plan uv
 	int NUM_VISIBILITIES = NUM_BASELINE*OVERSAMPLING_FACTOR;
 	int NUM_KERNEL = 17;
 	int TOTAL_KERNEL_SAMPLES = NUM_KERNEL*OVERSAMPLING_FACTOR;
 
-	int UV_LEN = 1000;
 
 
-
-
-	PRECISION* final_image = (PRECISION*)malloc(sizeof(PRECISION) * GRID_SIZE*GRID_SIZE);
 	PRECISION2* kernels = (PRECISION2*)malloc(sizeof(PRECISION2) * TOTAL_KERNEL_SAMPLES);
 	int2* kernel_supports = (int2*)malloc(sizeof(int2) * NUM_KERNEL);
 	PRECISION2* input_grid = (PRECISION2*)malloc(sizeof(PRECISION2) * GRID_SIZE * GRID_SIZE);
-
 	PRECISION3* vis_uvw_coords = (PRECISION3*)malloc(sizeof(PRECISION3) * NUM_VISIBILITIES);
-	/*for (int i = 0; i < NUM_VISIBILITIES; ++i) {
-		vis_uvw_coords[i].x = (float)(rand() % 601) - 300;  // Aléatoire entre -300 et 300
-		vis_uvw_coords[i].y = (float)(rand() % 601) - 300;  // Aléatoire entre -300 et 300
-		vis_uvw_coords[i].z = (float)(rand() % 601) - 300;  // Aléatoire entre -300 et 300
-	}*/
-	PRECISION3* corrected_vis_uvw_coords = (PRECISION3*)malloc(sizeof(PRECISION3) * NUM_VISIBILITIES);
-	for (int i = 0; i < NUM_VISIBILITIES; ++i) {
-		corrected_vis_uvw_coords[i].x = (float)(rand() % 601) - 300;  // Aléatoire entre -30000 et 30000
-		corrected_vis_uvw_coords[i].y = (float)(rand() % 601) - 300;   // Aléatoire entre -30000 et 30000
-		corrected_vis_uvw_coords[i].z = (float)(rand() % 601) - 300;   // Aléatoire entre -30000 et 30000
-	}
-
+	//PRECISION3* corrected_vis_uvw_coords = (PRECISION3*)malloc(sizeof(PRECISION3) * NUM_VISIBILITIES);
 	int* num_corrected_visibilities = (int*)malloc(sizeof(int) * 1);
+	PRECISION2* output_visibilities = (PRECISION2*)malloc(sizeof(PRECISION2) * NUM_VISIBILITIES);
+	Config config;
+
+
+
+
+
 	for(int i = 0; i < 1; ++i){
 		num_corrected_visibilities[i] = TOTAL_KERNEL_SAMPLES;
 	}
-	PRECISION2* output_visibilities = (PRECISION2*)malloc(sizeof(PRECISION2) * NUM_VISIBILITIES);
-	if (output_visibilities == NULL) {
+	if (kernels == NULL || kernel_supports == NULL || input_grid == NULL ||
+	vis_uvw_coords == NULL  ||
+	num_corrected_visibilities == NULL || output_visibilities == NULL) {
 		fprintf(stderr, "Erreur d'allocation mémoire\n");
 		exit(EXIT_FAILURE);
 	}
-	//PRECISION2* measured_vis = (PRECISION2*)malloc(sizeof(PRECISION2) * NUM_VISIBILITIES);
 
 
-	Config config;
 	config.max_w = 1895.410847844;//osef = baseline_max * freq obs /celerite
 	config.w_scale = pow(NUM_KERNEL - 1, 2.0) / config.max_w;
-	config.cell_size = 1.953125; // info depuis le .fits: norme du vecteur (CDELT1, CDELT2)
-	config.uv_scale =  GRID_SIZE/(2*300);
+	config.cell_size = (FOV_DEGREES * M_PI) / (180.0 * GRID_SIZE);
+; // info depuis le .fits: norme du vecteur (CDELT1, CDELT2)
+	config.uv_scale =  config.cell_size*GRID_SIZE;//GRID_SIZE/(2*300);
 
 	config.visibility_source_file = "vis.csv";
 	config.output_path = "";
@@ -281,7 +277,7 @@ int main(void) {
 	load_image_from_file( input_grid, config.final_image_output);
 
 	// Affichage des résultats
-	for (int i = 0; i < 10; i++) {
+	for (int i = 0; i < 5; i++) {
 		printf("Grille d'entrée %d: %.6f + %.6fi\n", i, input_grid[i].x, input_grid[i].y);
 	}
 
@@ -300,23 +296,19 @@ int main(void) {
 	std_degridding(GRID_SIZE, NUM_VISIBILITIES, NUM_KERNEL, TOTAL_KERNEL_SAMPLES,OVERSAMPLING_FACTOR, kernels, kernel_supports, input_grid,vis_uvw_coords, num_corrected_visibilities, &config, output_visibilities);
 
 	// Affichage des résultats
-	for (int i = 0; i < 10; i++) {
+	for (int i = 0; i < 5; i++) {
 		printf("Visibilité %d: %.6f + %.6fi\n", i, output_visibilities[i].x, output_visibilities[i].y);
 	}
 
 	convert_vis_to_csv(NUM_VISIBILITIES,output_visibilities, vis_uvw_coords, &config);
 
-	//correction_set_up(GRID_SIZE, input_grid);
-
-	//visibility_host_set_up(NUM_VISIBILITIES, &config, vis_uvw_coords, measured_vis);
 
 	free(kernel_supports);
 	free(kernels);
 	free(input_grid);
-	free(corrected_vis_uvw_coords);
 	free(output_visibilities);
 	free(num_corrected_visibilities);
-	//free(measured_vis);
+	free(vis_uvw_coords);
 
 	return 0;
 }
