@@ -1,0 +1,8 @@
+/**
+ * inPlace gains_apply_run script
+ * Input buffer: i_gains_in
+ * Output buffer: o_gains_out
+ * Parameters: NUM_BASELINES
+ */
+
+o_gains_out.matchWith(0, i_gains_in, 0, NUM_RECEIVERS);

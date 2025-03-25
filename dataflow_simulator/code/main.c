@@ -133,7 +133,8 @@ void std_degridding(int GRID_SIZE, int NUM_VISIBILITIES, int NUM_KERNELS, int TO
 }
 
 
-void load_image_from_file(PRECISION2 *input_grid, const char *file_name) {
+void load_image_from_file(PRECISION2 *input_grid, Config* config) {
+	const char *file_name = config->final_image_output;
 	FILE *f = fopen(file_name, "r");
 	if (f == NULL) {
 		perror(">>> ERROR");
@@ -216,7 +217,9 @@ void convert_vis_to_csv(int NUM_VISIBILITIES, PRECISION2* output_visibilities, P
 
 void vis_coord_set_up(int NUM_VISIBILITIES, int GRID_SIZE, PRECISION3* vis_uvw_coords, Config *config) {
 	// Paramètres pour définir la plage UV
-	const float MAX_UVW =3000.0;
+	const float MAX_UVW =config->max_w;
+	double meters_to_wavelengths = SPEED_OF_LIGHT/config->frequency_hz ; // lambda = c/f
+
 	const double sigma = MAX_UVW / 30.0;  // Ajuster selon vos besoins
 
 	// Option 1: Distribution uniforme (aléatoire) dans la plage
@@ -252,23 +255,30 @@ void vis_coord_set_up(int NUM_VISIBILITIES, int GRID_SIZE, PRECISION3* vis_uvw_c
 		vis_uvw_coords[i].z = (float)rayleigh(sigma);
 
 	}*/
+	for (int i = 0; i < NUM_VISIBILITIES; ++i) {
+		vis_uvw_coords[i].x *= meters_to_wavelengths;  // Génération d'un nombre aléatoire suivant une loi normale
+		vis_uvw_coords[i].y *= meters_to_wavelengths;
+		vis_uvw_coords[i].z *= meters_to_wavelengths;
+	}
 
 }
 
 int main(void) {
 
 	int FOV_DEGREES = 1; //champs de vue
+	int NUM_CHANNEL = 1;//nombre de canaux de frequence
+	int NUM_POL = 2;// nombre de polarisation
+	int TIMING_SAMPLE = 10000;
 
-	int NUM_RECEIVERS = 5;
-	int NUM_BASELINE = NUM_RECEIVERS*(NUM_RECEIVERS-1)/2;
-	int OVERSAMPLING_FACTOR = 16;
-	int GRID_SIZE = 512;
-
-
-	// si y'a plus de vis que de taille d'image d'entré ça couvre tout le plan uv
-	int NUM_VISIBILITIES = NUM_BASELINE*OVERSAMPLING_FACTOR;
-	int NUM_KERNEL = 17;
-	int TOTAL_KERNEL_SAMPLES = NUM_KERNEL*OVERSAMPLING_FACTOR;
+	int NUM_RECEIVERS = 5;//nombre d'antennes
+	int NUM_BASELINE = NUM_RECEIVERS*(NUM_RECEIVERS-1)/2; // nombre de paire d'antennes
+	int OVERSAMPLING_FACTOR = 16; // nombre de fois que les données sont surechantillonée
+	int GRID_SIZE = 512; // taille de l'image fits "true sky"
+	int NUM_VISIBILITIES = NUM_BASELINE*TIMING_SAMPLE*NUM_CHANNEL*NUM_POL; // greater than (GRID_SIZE/cell_size)²
+	int NUM_KERNEL = 17;//nombre de noyaux de convolution
+	int k = 100;//GRID_SIZE doit etr au moins 2 fois superieur à la taille du noyau kernel_size = 2*half+1
+	int half_support =(int)( (GRID_SIZE/2 -1)/k);
+	int TOTAL_KERNEL_SAMPLES = (int)(pow(2*half_support*OVERSAMPLING_FACTOR,2)*NUM_KERNEL); //c'est recalculé dans le processus mais faut mettre une taille suffisante
 
 
 
@@ -302,12 +312,16 @@ int main(void) {
 		exit(EXIT_FAILURE);
 	}
 
-
-	config.max_w = 1895.410847844;//osef = baseline_max * freq obs /celerite
+	config.frequency_hz = 29979.0; // observed frequency --> osef
+	int baseline_max = 100;
+	config.max_w = baseline_max*config.frequency_hz/SPEED_OF_LIGHT;// baseline_max * freq obs /celerite mais osef en fait
 	config.w_scale = pow(NUM_KERNEL - 1, 2.0) / config.max_w;
-	config.cell_size = (FOV_DEGREES * M_PI) / (180.0 * GRID_SIZE);
-; // info depuis le .fits: norme du vecteur (CDELT1, CDELT2)
-	config.uv_scale =  config.cell_size*GRID_SIZE;//GRID_SIZE/(2*300);
+	config.cell_size = (FOV_DEGREES * M_PI) / (180.0 * GRID_SIZE);// lower than 1/2.f_max
+	config.uv_scale =  config.cell_size*GRID_SIZE;
+
+	config.num_baselines = NUM_BASELINE;
+	config.num_kernels = NUM_KERNEL;
+	config.total_kernel_samples = TOTAL_KERNEL_SAMPLES;
 
 	config.visibility_source_file = "vis.csv";
 	config.output_path = "";
@@ -315,9 +329,10 @@ int main(void) {
 	config.degridding_kernel_support_file = "config/wproj_manualconj_degridding_kernel_supports_x16.csv";
 	config.degridding_kernel_imag_file = "config/wproj_manualconj_degridding_kernels_imag_x16.csv";
 	config.degridding_kernel_real_file= "config/wproj_manualconj_degridding_kernels_real_x16.csv";
+	config.oversampling = OVERSAMPLING_FACTOR;
 
 
-	load_image_from_file( input_grid, config.final_image_output);
+	load_image_from_file( input_grid, &config);
 
 	// Affichage des résultats
 	for (int i = 0; i < 5; i++) {
@@ -328,6 +343,13 @@ int main(void) {
 
 
 	degridding_kernel_host_set_up( NUM_KERNEL, TOTAL_KERNEL_SAMPLES, &config, kernel_supports,  kernels);
+	// Affichage des résultats
+	for (int i = 0; i < 5; i++) {
+		printf("kernel_supports %d: %d + %di\n", i, kernel_supports[i].x, kernel_supports[i].y);
+	}
+	for (int i = 0; i < 5; i++) {
+		printf("kernels %d: %.6f + %.6fi\n", i, kernels[i].x, kernels[i].y);
+	}
 
 	/*for (int i=0;i<NUM_VISIBILITIES;i++) {
 		output_visibilities[i].x = input_grid[i].x;

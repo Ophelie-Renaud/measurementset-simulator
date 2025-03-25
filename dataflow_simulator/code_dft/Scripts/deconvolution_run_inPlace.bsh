@@ -1,0 +1,9 @@
+/**
+ * inPlace gains_apply_run script
+ * Input buffer: i_gains_in
+ * Output buffer: o_gains_out
+ * Parameters: NUM_BASELINES
+ */
+
+o_residual_image.matchWith(0, i_dirty_image_in, 0, GRID_SIZE*GRID_SIZE);
+//o_sources_out.matchWith(0, i_sources_in, 0, NUM_MAX_SOURCES);

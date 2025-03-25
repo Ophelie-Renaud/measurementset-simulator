@@ -1,0 +1,6 @@
+# Memory scripts summary
+- Independent match trees : *0*
+- Total number of buffers in these trees: From 0 to 0 buffers.
+- Total size of these buffers: From 0 to 0 (NaN%).
+
+# Match tree optimization log

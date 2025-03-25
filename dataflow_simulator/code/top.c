@@ -17,7 +17,7 @@ void config_struct_set_up(int GRID_SIZE, int NUM_KERNELS, OUT Config *config_str
 	config_struct->gpu_max_threads_per_block_dimension = 32;
 	//radians per cell, corresponds with 1 degree fov for an image of 2048x2048, not sure why actual image is set to 2458, investigate
 	config_struct->cell_size                           = 8.52211548825356E-06; 
-	config_struct->frequency_hz                        = SPEED_OF_LIGHT;
+	config_struct->frequency_hz                        = SPEED_OF_LIGHT; // frequence du signal observé
 	config_struct->dirty_image_output                   = "gleam_small_dirty_image.csv";
 	config_struct->right_ascension						= true;
 	config_struct->visibility_source_file				= "data/input/GLEAM_small_visibilities_corrupted.csv";
@@ -177,7 +177,7 @@ void visibility_host_set_up(int NUM_VISIBILITIES, Config *config, PRECISION3 *vi
     double vis_real = 0.0;
     double vis_imag = 0.0;
     double vis_weight = 0.0;
-    double meters_to_wavelengths = config->frequency_hz / SPEED_OF_LIGHT;
+    double meters_to_wavelengths = config->frequency_hz / SPEED_OF_LIGHT; // lambda = c/f
 
     // printf("meters_to_wavelengths %lf\n", meters_to_wavelengths);
 
