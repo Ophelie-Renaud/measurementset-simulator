@@ -15,6 +15,7 @@ extern "C" {
 	void end_sink(int NUM_RECEIVERS, IN PRECISION2 *gains);
 
 	void config_struct_set_up(int GRID_SIZE, int NUM_KERNELS, OUT Config *config);
+	void config_struct_set_up_v2(int GRID_SIZE, int NUM_KERNELS, int NUM_BASELINES, int TOTAL_KERNEL_SAMPLES, int OVERSAMPLING_FACTOR,OUT Config *config_struct) ;
 
 	void gains_host_set_up(int NUM_RECEIVERS, int NUM_BASELINES, IN Config *config, OUT PRECISION2 *gains, OUT int2 *receiver_pairs);
 

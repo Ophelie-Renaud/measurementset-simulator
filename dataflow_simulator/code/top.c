@@ -321,6 +321,7 @@ void kernel_host_set_up(int NUM_KERNELS, __attribute__((unused)) int TOTAL_KERNE
 //basically the same function as kernel_host_set_up, just loads the stipulated degridding kernels and supports instead
 void degridding_kernel_host_set_up(int NUM_KERNELS, int TOTAL_KERNEL_SAMPLES, IN Config *config,
 		OUT int2 *degridding_kernel_supports, OUT PRECISION2 *degridding_kernels){
+
 	printf("UPDATE >>> Loading degridding kernel support file from %s...\n\n",config->degridding_kernel_support_file);
 
 	FILE *kernel_support_file = fopen(config->degridding_kernel_support_file,"r");

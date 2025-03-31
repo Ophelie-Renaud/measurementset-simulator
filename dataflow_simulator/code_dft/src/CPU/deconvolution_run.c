@@ -199,7 +199,7 @@ void hogbom_clean(int GRID_SIZE, int NUM_MINOR_CYCLES, int MAX_SOURCES, IN PRECI
 
 	memcpy(output_model, current_model, sizeof(PRECISION) * GRID_SIZE * GRID_SIZE);
 	*num_sources_out = 0;
-        /*
+
 	PRECISION* temp_residual = (PRECISION*) malloc(sizeof(PRECISION) * GRID_SIZE * GRID_SIZE);
 	memcpy(temp_residual, residual, sizeof(PRECISION) * GRID_SIZE * GRID_SIZE);
 
@@ -275,7 +275,7 @@ void hogbom_clean(int GRID_SIZE, int NUM_MINOR_CYCLES, int MAX_SOURCES, IN PRECI
 			}
 		}
 
-		/*for(int i = *num_sources_out - 2; i >= 0; --i)
+		for(int i = *num_sources_out - 2; i >= 0; --i)
 		{
 		    if(max_pos.x == (int)sources_out[i].x && max_pos.y == (int)sources_out[i].y)
 		    {
@@ -283,21 +283,23 @@ void hogbom_clean(int GRID_SIZE, int NUM_MINOR_CYCLES, int MAX_SOURCES, IN PRECI
 		        --*num_sources_out;
 		        break;
 		    }
-		}*/
-	/*}*/
+		}
+	}
 
 
-	/*for(int i = 0; i < 10000; ++i){
+
+
+	for(int i = 0; i < 10000; ++i){
 		int x = rand() % GRID_SIZE;
 		int y = rand() % GRID_SIZE;
 
 		int idx = y * GRID_SIZE + x;
 
 		output_model[idx] += config->psf_max_value * GAIN;
-	}*/
+	}
 
 
-	/*if(*num_sources_out > 0)
+	if(*num_sources_out > 0)
 	{
 		printf("UPDATE >>> Performing conversion on Source coordinates...\n\n");
 
@@ -313,5 +315,5 @@ void hogbom_clean(int GRID_SIZE, int NUM_MINOR_CYCLES, int MAX_SOURCES, IN PRECI
 	printf("sources_out\t\t: ");
 	MD5_Update(sizeof(PRECISION3) * *num_sources_out, sources_out);
 
-	 */
+
 }

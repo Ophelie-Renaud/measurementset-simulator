@@ -36,9 +36,9 @@ void config_struct_set_up(int GRID_SIZE, int NUM_KERNELS, OUT Config *config_str
 	config_struct->w_scale             = pow(NUM_KERNELS - 1, 2.0) / config_struct->max_w;
 	config_struct->oversampling        = 16;
 	config_struct->uv_scale            = config_struct->cell_size * GRID_SIZE;
-	config_struct->kernel_real_file    = "data/input/kernels/new/wproj_manualconj_gridding_kernels_real_x16.csv";
-	config_struct->kernel_imag_file    = "data/input/kernels/new/wproj_manualconj_gridding_kernels_imag_x16.csv";
-	config_struct->kernel_support_file = "data/input/kernels/new/wproj_manualconj_gridding_kernel_supports_x16.csv";
+	config_struct->kernel_real_file    = "data/input/kernels/new/wproj_manualconj_degridding_kernels_real_x16.csv";
+	config_struct->kernel_imag_file    = "data/input/kernels/new/wproj_manualconj_degridding_kernels_imag_x16.csv";
+	config_struct->kernel_support_file = "data/input/kernels/new/wproj_manualconj_degridding_kernel_supports_x16.csv";
 	config_struct->degridding_kernel_real_file    = "data/input/kernels/new/wproj_manualconj_degridding_kernels_real_x16.csv";
 	config_struct->degridding_kernel_imag_file    = "data/input/kernels/new/wproj_manualconj_degridding_kernels_imag_x16.csv";
 	config_struct->degridding_kernel_support_file = "data/input/kernels/new/wproj_manualconj_degridding_kernel_supports_x16.csv";
@@ -65,6 +65,64 @@ void config_struct_set_up(int GRID_SIZE, int NUM_KERNELS, OUT Config *config_str
 
 	// Direct Fourier Transform
 	config_struct->predicted_vis_output = "predicted_visibilities.csv";
+}
+
+void config_struct_set_up_v2(int GRID_SIZE, int NUM_KERNELS, int NUM_BASELINES, int TOTAL_KERNEL_SAMPLES, int OVERSAMPLING_FACTOR,OUT Config *config_struct) {
+	// load parameter
+	config_struct->num_baselines = NUM_BASELINES;
+	config_struct->num_kernels = NUM_KERNELS;
+	config_struct->total_kernel_samples = 50017280;
+	config_struct->grid_size = GRID_SIZE;
+	config_struct->oversampling = OVERSAMPLING_FACTOR;
+
+	// define other constant
+	int fov_degrees = 1;
+	int baseline_max = 100;
+
+	//
+	config_struct->frequency_hz = 29979.0; // observed frequency --> osef
+	config_struct->max_w = baseline_max*config_struct->frequency_hz/SPEED_OF_LIGHT;// baseline_max * freq obs /celerite mais osef en fait
+	config_struct->w_scale = pow(NUM_KERNELS - 1, 2.0) / config_struct->max_w;
+	config_struct->cell_size = (fov_degrees * PI) / (180.0 * GRID_SIZE);// lower than 1/2.f_max
+	config_struct->uv_scale =  config_struct->cell_size*GRID_SIZE;
+
+	config_struct->loop_gain           = 0.1;  // 0.1 is typical
+	config_struct->weak_source_percent_gc = 0.005;//0.00005; // example: 0.05 = 5%
+	config_struct->weak_source_percent_img = 0.0002;//0.00005; // example: 0.05 = 5%
+	config_struct->psf_max_value       = 0.0;  // customize as needed, or allow override by reading psf.
+	config_struct->noise_factor          = 1.5;
+
+	// Gains - NOTE: initial gains from file logic not implemented yet
+	config_struct->default_gains_file = "data/input/TrueGainsNotRotated.csv";
+	config_struct->output_gains_file = "estimated_gains.csv";
+	config_struct->use_default_gains	= true;
+
+	// input files
+	config_struct->visibility_source_file = "../code/vis.csv";
+	/*config_struct->kernel_real_file    = "../code/config/wproj_manualconj_gridding_kernel_supports_x16.csv";
+	config_struct->kernel_imag_file    = "../code/config/wproj_manualconj_gridding_kernels_imag_x16.csv";
+	config_struct->kernel_support_file = "../code/config/wproj_manualconj_gridding_kernels_real_x16.csv";
+	config_struct->degridding_kernel_support_file = "../code/config/wproj_manualconj_degridding_kernel_supports_x16.csv";
+	config_struct->degridding_kernel_imag_file = "../code/config/wproj_manualconj_degridding_kernels_imag_x16.csv";
+	config_struct->degridding_kernel_real_file= "../code/config/wproj_manualconj_degridding_kernels_real_x16.csv";*/
+	config_struct->kernel_real_file    = "data/input/kernels/new/wproj_manualconj_degridding_kernels_real_x16.csv";
+	config_struct->kernel_imag_file    = "data/input/kernels/new/wproj_manualconj_degridding_kernels_imag_x16.csv";
+	config_struct->kernel_support_file = "data/input/kernels/new/wproj_manualconj_degridding_kernel_supports_x16.csv";
+	config_struct->degridding_kernel_real_file    = "data/input/kernels/new/wproj_manualconj_degridding_kernels_real_x16.csv";
+	config_struct->degridding_kernel_imag_file    = "data/input/kernels/new/wproj_manualconj_degridding_kernels_imag_x16.csv";
+	config_struct->degridding_kernel_support_file = "data/input/kernels/new/wproj_manualconj_degridding_kernel_supports_x16.csv";
+	config_struct->psf_input_file        = "data/input/psf.csv";
+
+
+	// output files
+	config_struct->output_path	= "data/output/tune/";
+	config_struct->psf_image_output = "dirty_psf.csv";
+	config_struct->clean_psf_image_output = "clean_psf.csv";
+	config_struct->model_image_output = "model.csv";
+	config_struct->final_image_output = "deconvolved.csv";
+	config_struct->model_sources_output  = "sample_model_sources.csv";
+	config_struct->residual_image_output = "residual_image.csv";
+
 }
 
 
@@ -238,18 +296,14 @@ void visibility_host_set_up(int NUM_VISIBILITIES, Config *config, PRECISION3 *vi
 
 void kernel_host_set_up(int NUM_KERNELS, __attribute__((unused)) int TOTAL_KERNEL_SAMPLES, Config *config, int2 *kernel_supports, PRECISION2 *kernels)
 {
-	//Need to load kernel support file first, 
-	// host->kernel_supports = (int2*) calloc(config->num_kernels, sizeof(int2));
-	// if(host->kernel_supports == NULL)
-	// 	return false;
-
 	printf("UPDATE >>> Loading kernel support file from %s...\n\n",config->kernel_support_file);
 
 	FILE *kernel_support_file = fopen(config->kernel_support_file,"r");
 
-	if(kernel_support_file == NULL)
+	if (kernel_support_file == NULL) {
+		printf("ERROR: Unable to open kernel support file %s\n", config->kernel_support_file);
 		exit(EXIT_FAILURE);
-		// return false;
+	}
 	
 	int total_kernel_samples = 0;
 	
@@ -264,27 +318,26 @@ void kernel_host_set_up(int NUM_KERNELS, __attribute__((unused)) int TOTAL_KERNE
 	
 	printf("UPDATE >>> Total number of samples needed to store kernels is %d...\n\n", total_kernel_samples);
 
-	printf("kernel_supports MD5 \t: ");
-	MD5_Update(sizeof(int2) * NUM_KERNELS, kernel_supports);
+	//printf("kernel_supports MD5 \t: ");
+	//MD5_Update(sizeof(int2) * NUM_KERNELS, kernel_supports);
 
 	printf("UPDATE >>> Loading kernel files file from %s real and %s imaginary...\n\n",
 		config->kernel_real_file, config->kernel_imag_file);
 
 	//now load kernels into CPU memory
 	FILE *kernel_real_file = fopen(config->kernel_real_file, "r");
-	FILE *kernel_imag_file = fopen(config->kernel_imag_file, "r");
-	
-	if(!kernel_real_file || !kernel_imag_file)
-	{
-		if(kernel_real_file) fclose(kernel_real_file);
-		if(kernel_imag_file) fclose(kernel_imag_file);
+
+	if (kernel_real_file == NULL) {
+		printf("ERROR: Unable to open real kernel file %s\n", config->kernel_real_file);
 		exit(EXIT_FAILURE);
-		// return false; // unsuccessfully loaded data
 	}
 
-	// host->kernels = (Complex*) calloc(config->total_kernel_samples, sizeof(Complex));
-	// if(host->kernels == NULL)
-	// 	return false;
+	FILE *kernel_imag_file = fopen(config->kernel_imag_file, "r");
+	if (kernel_imag_file == NULL) {
+		printf("ERROR: Unable to open imaginary kernel file %s\n", config->kernel_imag_file);
+		exit(EXIT_FAILURE);
+	}
+
 
 	int kernel_index = 0;
 	for(int plane_num = 0; plane_num < NUM_KERNELS; ++plane_num)
@@ -296,14 +349,9 @@ void kernel_host_set_up(int NUM_KERNELS, __attribute__((unused)) int TOTAL_KERNE
 			double real = 0.0;
 			double imag = 0.0; 
 
-// #if SINGLE_PRECISION
-// 				fscanf(kernel_real_file, "%f ", &real);
-// 				fscanf(kernel_imag_file, "%f ", &imag);
-// #else
-				fscanf(kernel_real_file, "%lf ", &real);
-				fscanf(kernel_imag_file, "%lf ", &imag);
-//#endif
-			// kernels[kernel_index] = (Complex) {.real = (PRECISION)real, .imaginary = (PRECISION)imag};
+			fscanf(kernel_real_file, "%lf ", &real);
+			fscanf(kernel_imag_file, "%lf ", &imag);
+
 			kernels[kernel_index].x = real;
 			kernels[kernel_index].y = imag;
 
@@ -314,8 +362,6 @@ void kernel_host_set_up(int NUM_KERNELS, __attribute__((unused)) int TOTAL_KERNE
 	fclose(kernel_real_file);
 	fclose(kernel_imag_file);
 
-	
-	//return true;
 }
 
 //basically the same function as kernel_host_set_up, just loads the stipulated degridding kernels and supports instead

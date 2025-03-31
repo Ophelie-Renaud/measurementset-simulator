@@ -213,24 +213,19 @@ void convert_vis_to_csv(int NUM_VISIBILITIES, PRECISION2* output_visibilities, P
 }
 
 
+// Fonction pour générer un nombre aléatoire entre min et max
+double random_double(double min, double max) {
+	return min + (rand() / (double)RAND_MAX) * (max - min);
+}
 
-
-void vis_coord_set_up(int NUM_VISIBILITIES, int GRID_SIZE, PRECISION3* vis_uvw_coords, Config *config) {
+void vis_coord_set_up(int NUM_VISIBILITIES , int GRID_SIZE, int TIMING_SAMPLE, PRECISION3* vis_uvw_coords, Config *config) {
 	// Paramètres pour définir la plage UV
 	const float MAX_UVW =config->max_w;
 	double meters_to_wavelengths = SPEED_OF_LIGHT/config->frequency_hz ; // lambda = c/f
 
 	const double sigma = MAX_UVW / 30.0;  // Ajuster selon vos besoins
 
-	// Option 1: Distribution uniforme (aléatoire) dans la plage
-	/*for (int i = 0; i < NUM_VISIBILITIES; ++i) {
-		// Générer des coordonnées aléatoires dans un carré de taille MAX_UVW
-		vis_uvw_coords[i].x = (float)(rand() % (int)(2 * MAX_UVW + 1)) - MAX_UVW;  // Aléatoire entre -MAX_UVW et +MAX_UVW
-		vis_uvw_coords[i].y = (float)(rand() % (int)(2 * MAX_UVW + 1)) - MAX_UVW;  // Aléatoire entre -MAX_UVW et +MAX_UVW
-		vis_uvw_coords[i].z = (float)(rand() % (int)(2 * MAX_UVW + 1)) - MAX_UVW;  // Aléatoire entre -MAX_UVW et +MAX_UVW
-	}*/
-
-	// Option 2: Distribution gaussienne autour du centre (phase center) - Box-Muller simple
+	// test 1: Distribution gaussienne autour du centre (phase center) - Box-Muller simple
 
 	for (int i = 0; i < NUM_VISIBILITIES; ++i) {
 		// Générer une coordonnée x, y, z suivant une distribution normale
@@ -246,19 +241,31 @@ void vis_coord_set_up(int NUM_VISIBILITIES, int GRID_SIZE, PRECISION3* vis_uvw_c
 
 	}
 
-	// Option 3: Distribution gaussienne autour du centre (phase center) - Rayleigh simple
+	// Option 2: autre
+	// Génération aléatoire des positions d'antennes
+	int baseline_max = 1000;
 
-	/*for (int i = 0; i < NUM_VISIBILITIES; ++i) {
-		// Générer une coordonnée x, y, z suivant une distribution normale
-		vis_uvw_coords[i].x = (float)rayleigh(sigma);
-		vis_uvw_coords[i].y = (float)rayleigh(sigma);
-		vis_uvw_coords[i].z = (float)rayleigh(sigma);
+	double antennas_x[config->num_baselines], antennas_y[config->num_baselines];
+	double u, v, bx, by, theta;
+	for (int i = 0; i < config->num_baselines; i++) {
+		antennas_x[i] = random_double(-baseline_max, baseline_max);
+		antennas_y[i] = random_double(-baseline_max, baseline_max);
+	}
+	for (int t = 0; t < TIMING_SAMPLE; t++) {
+		theta = (t / (double)TIMING_SAMPLE) * 2.0 * M_PI;
 
-	}*/
-	for (int i = 0; i < NUM_VISIBILITIES; ++i) {
-		vis_uvw_coords[i].x *= meters_to_wavelengths;  // Génération d'un nombre aléatoire suivant une loi normale
-		vis_uvw_coords[i].y *= meters_to_wavelengths;
-		vis_uvw_coords[i].z *= meters_to_wavelengths;
+		for (int i = 0; i < config->num_baselines; i++) {
+			for (int j = i + 1; j < config->num_baselines; j++) {
+				bx = antennas_x[j] - antennas_x[i];
+				by = antennas_y[j] - antennas_y[i];
+
+				u = (bx * cos(theta) + by * sin(theta)) / meters_to_wavelengths;
+				v = (-bx * sin(theta) + by * cos(theta)) / meters_to_wavelengths;
+
+				printf("%.2f, %.2f\n", u, v);
+				printf("%.2f, %.2f\n", -u, -v); // Symétrie conjugée
+			}
+		}
 	}
 
 }
@@ -268,7 +275,7 @@ int main(void) {
 	int FOV_DEGREES = 1; //champs de vue
 	int NUM_CHANNEL = 1;//nombre de canaux de frequence
 	int NUM_POL = 2;// nombre de polarisation
-	int TIMING_SAMPLE = 10000;
+	int TIMING_SAMPLE = 100;
 
 	int NUM_RECEIVERS = 5;//nombre d'antennes
 	int NUM_BASELINE = NUM_RECEIVERS*(NUM_RECEIVERS-1)/2; // nombre de paire d'antennes
@@ -276,7 +283,7 @@ int main(void) {
 	int GRID_SIZE = 512; // taille de l'image fits "true sky"
 	int NUM_VISIBILITIES = NUM_BASELINE*TIMING_SAMPLE*NUM_CHANNEL*NUM_POL; // greater than (GRID_SIZE/cell_size)²
 	int NUM_KERNEL = 17;//nombre de noyaux de convolution
-	int k = 100;//GRID_SIZE doit etr au moins 2 fois superieur à la taille du noyau kernel_size = 2*half+1
+	int k = 1000;//GRID_SIZE doit etr au moins 2 fois superieur à la taille du noyau kernel_size = 2*half+1
 	int half_support =(int)( (GRID_SIZE/2 -1)/k);
 	int TOTAL_KERNEL_SAMPLES = (int)(pow(2*half_support*OVERSAMPLING_FACTOR,2)*NUM_KERNEL); //c'est recalculé dans le processus mais faut mettre une taille suffisante
 
@@ -312,7 +319,7 @@ int main(void) {
 		exit(EXIT_FAILURE);
 	}
 
-	config.frequency_hz = 29979.0; // observed frequency --> osef
+	config.frequency_hz = SPEED_OF_LIGHT/0.21; // observed frequency --> osef
 	int baseline_max = 100;
 	config.max_w = baseline_max*config.frequency_hz/SPEED_OF_LIGHT;// baseline_max * freq obs /celerite mais osef en fait
 	config.w_scale = pow(NUM_KERNEL - 1, 2.0) / config.max_w;
@@ -339,7 +346,7 @@ int main(void) {
 		printf("Grille d'entrée %d: %.6f + %.6fi\n", i, input_grid[i].x, input_grid[i].y);
 	}
 
-	vis_coord_set_up(NUM_VISIBILITIES, GRID_SIZE,vis_uvw_coords, &config);
+	vis_coord_set_up(NUM_VISIBILITIES, GRID_SIZE, TIMING_SAMPLE,vis_uvw_coords, &config);
 
 
 	degridding_kernel_host_set_up( NUM_KERNEL, TOTAL_KERNEL_SAMPLES, &config, kernel_supports,  kernels);

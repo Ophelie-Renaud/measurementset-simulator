@@ -9,20 +9,20 @@ void gridding_actor(int GRID_SIZE, int NUM_VISIBILITIES, int NUM_KERNELS, int TO
 
     printf("UPDATE >>> Gridding on CPU, for %d visibilities...\n\n", NUM_VISIBILITIES);
 
-    printf("visibilities MD5\t: ");
-    MD5_Update(sizeof(PRECISION2) * NUM_VISIBILITIES, visibilities);
+   // printf("visibilities MD5\t: ");
+    //MD5_Update(sizeof(PRECISION2) * NUM_VISIBILITIES, visibilities);
 
     // kernels MD5
-    printf("kernels MD5\t\t\t: ");
-    MD5_Update(sizeof(PRECISION2) * TOTAL_KERNEL_SAMPLES, kernels);
+    //printf("kernels MD5\t\t\t: ");
+    //MD5_Update(sizeof(PRECISION2) * TOTAL_KERNEL_SAMPLES, kernels);
 
     // vis_uvw_coords MD5
-    printf("vis_uvw_coords MD5\t: ");
-    MD5_Update(sizeof(PRECISION3) * NUM_VISIBILITIES, vis_uvw_coords);
+    //printf("vis_uvw_coords MD5\t: ");
+   // MD5_Update(sizeof(PRECISION3) * NUM_VISIBILITIES, vis_uvw_coords);
 
     // kernel_supports MD5
-    printf("kernel_supports MD5\t: ");
-    MD5_Update(sizeof(int2) * NUM_KERNELS, kernel_supports);
+   // printf("kernel_supports MD5\t: ");
+   // MD5_Update(sizeof(int2) * NUM_KERNELS, kernel_supports);
 
     // num_visibilities
     printf("num_visibilities\t: %d\n", NUM_VISIBILITIES);

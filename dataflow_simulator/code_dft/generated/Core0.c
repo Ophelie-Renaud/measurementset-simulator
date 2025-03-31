@@ -1532,11 +1532,19 @@ int *const num_sources_in_2_3__num_sources__4 = (int*) (Shared + 3471878208); //
 int *const num_sources_in_3_3__num_sources__4 = (int*) (Shared + 3471873216); // BR_delta_4__num_sources_in_num_sources_in_3_3 > delta_4_dft_run_3_dft_actor_0_num_sources size:= 1*int
 int *const num_sources_out__num_sources_out__0 = (int*) (Shared + 3471880448); // psi_4_hogbom_clean_0_num_sources_out > psi_end_num_sources_out_num_sources_out size:= 1*int
 
+
+
 void* computationThread_Core0(void *arg) {
 	ThreadArgs* args = (ThreadArgs*) arg;  // Conversion du pointeur void* en ThreadArgs*
 	int num_vis = args->num_vis;
 	int grid_size = args->grid_size;
 	int num_minor_cycle = args->num_minor_cycle;
+
+	int num_receivers = 5;
+	int num_baselines = num_receivers*(num_receivers-1)/2;
+	int oversampling_factor = 16;
+	int num_kernels = 17;
+	int total_kernel_samples = 50017280;
 
 #ifdef PREESM_MD5_UPDATE
 	PREESM_MD5_CTX preesm_md5_ctx_delta_0__token_in__0;
@@ -1682,23 +1690,23 @@ void* computationThread_Core0(void *arg) {
     fifoPop(source_list__source_list__0, FIFO_Head_psi_end_source_list__delta_init_source_list__0, 4800, NULL, 0); // 4800 * char
     iterator(5/*ITER*/, 0/*START*/, cycle_out__input__0); // iterator_0
 
-    config_struct_set_up(grid_size/*GRID_SIZE*/, 17/*NUM_KERNELS*/, config__input__0); // setup_ri_pipeline_0_config_struct_set_up_0
+    config_struct_set_up_v2(grid_size/*GRID_SIZE*/, num_kernels,num_baselines,2,oversampling_factor, config__input__0); // setup_ri_pipeline_0_config_struct_set_up_0
 
     correction_set_up(grid_size/*GRID_SIZE*/, prolate__prolate__0); // setup_ri_pipeline_0_correction_set_up_0
 
-    config_struct_set_up(grid_size/*GRID_SIZE*/, 17/*NUM_KERNELS*/, config__input__1); // setup_ri_pipeline_1_config_struct_set_up_0
+    config_struct_set_up_v2(grid_size/*GRID_SIZE*/, num_kernels,num_baselines,2,oversampling_factor, config__input__1); // setup_ri_pipeline_1_config_struct_set_up_0
 
     correction_set_up(grid_size/*GRID_SIZE*/, prolate__prolate__1); // setup_ri_pipeline_1_correction_set_up_0
 
-    config_struct_set_up(grid_size/*GRID_SIZE*/, 17/*NUM_KERNELS*/, config__input__2); // setup_ri_pipeline_2_config_struct_set_up_0
+    config_struct_set_up_v2(grid_size/*GRID_SIZE*/, num_kernels,num_baselines,2,oversampling_factor, config__input__2); // setup_ri_pipeline_2_config_struct_set_up_0
 
     correction_set_up(grid_size/*GRID_SIZE*/, prolate__prolate__2); // setup_ri_pipeline_2_correction_set_up_0
 
-    config_struct_set_up(grid_size/*GRID_SIZE*/, 17/*NUM_KERNELS*/, config__input__3); // setup_ri_pipeline_3_config_struct_set_up_0
+    config_struct_set_up_v2(grid_size/*GRID_SIZE*/, num_kernels,num_baselines,2,oversampling_factor, config__input__3); // setup_ri_pipeline_3_config_struct_set_up_0
 
     correction_set_up(grid_size/*GRID_SIZE*/, prolate__prolate__3); // setup_ri_pipeline_3_correction_set_up_0
 
-    config_struct_set_up(grid_size/*GRID_SIZE*/, 17/*NUM_KERNELS*/, config__input__4); // setup_ri_pipeline_4_config_struct_set_up_0
+    config_struct_set_up_v2(grid_size/*GRID_SIZE*/, num_kernels,num_baselines,2,oversampling_factor, config__input__4); // setup_ri_pipeline_4_config_struct_set_up_0
 
     correction_set_up(grid_size/*GRID_SIZE*/, prolate__prolate__4); // setup_ri_pipeline_4_correction_set_up_0
 
@@ -1839,19 +1847,19 @@ void* computationThread_Core0(void *arg) {
       memcpy(save_2__cycle__4 + 0, cycle_out_4__input__0 + 0, 4); // 1 * int
     }
 
-    psf_host_set_up(grid_size/*GRID_SIZE*/, 2458/*PSF_GRID_SIZE*/, setup_psf_1__config__0, psf__input__0,
+    psf_host_set_up(grid_size/*GRID_SIZE*/, grid_size, setup_psf_1__config__0, psf__input__0,
         psf_max_value__psf_max_value__0); // setup_ri_pipeline_0_psf_host_set_up_0
 
-    psf_host_set_up(grid_size/*GRID_SIZE*/, 2458/*PSF_GRID_SIZE*/, setup_psf_1__config__1, psf__input__1,
+    psf_host_set_up(grid_size/*GRID_SIZE*/, grid_size, setup_psf_1__config__1, psf__input__1,
         psf_max_value__psf_max_value__1); // setup_ri_pipeline_1_psf_host_set_up_0
 
-    psf_host_set_up(grid_size/*GRID_SIZE*/, 2458/*PSF_GRID_SIZE*/, setup_psf_1__config__2, psf__input__2,
+    psf_host_set_up(grid_size/*GRID_SIZE*/, grid_size, setup_psf_1__config__2, psf__input__2,
         psf_max_value__psf_max_value__2); // setup_ri_pipeline_2_psf_host_set_up_0
 
-    psf_host_set_up(grid_size/*GRID_SIZE*/, 2458/*PSF_GRID_SIZE*/, setup_psf_1__config__3, psf__input__3,
+    psf_host_set_up(grid_size/*GRID_SIZE*/, grid_size, setup_psf_1__config__3, psf__input__3,
         psf_max_value__psf_max_value__3); // setup_ri_pipeline_3_psf_host_set_up_0
 
-    psf_host_set_up(grid_size/*GRID_SIZE*/, 2458/*PSF_GRID_SIZE*/, setup_psf_1__config__4, psf__input__4,
+    psf_host_set_up(grid_size/*GRID_SIZE*/, grid_size, setup_psf_1__config__4, psf__input__4,
         psf_max_value__psf_max_value__4); // setup_ri_pipeline_4_psf_host_set_up_0
 
     token_sink(delta_0__token_in__0); // delta_0_token_sink_0
@@ -2182,13 +2190,13 @@ void* computationThread_Core0(void *arg) {
     clean_psf_host_set_up(grid_size/*GRID_SIZE*/, 0/*GAUSSIAN_CLEAN_PSF*/, setup_clean_psf_0__config__0,
         setup_clean_psf_0__dirty_psf__0, clean_psf__clean_psf__0, partial_psf_halfdims__input__0); // setup_ri_pipeline_0_clean_psf_set_up_0
 
-    degridding_kernel_host_set_up(17/*NUM_DEGRIDDING_KERNELS*/, 108800/*TOTAL_DEGRIDDING_KERNEL_SAMPLES*/,
+    degridding_kernel_host_set_up(num_kernels, total_kernel_samples,
         setup_degridding_kernel_2__config__0, degridding_kernel_supports__supports__0, degridding_kernels__kernels__0); // setup_ri_pipeline_0_degridding_kernel_host_set_up_0
 
-    gains_host_set_up(512/*NUM_RECEIVERS*/, 130816/*NUM_BASELINES*/, setup_gains_3__config__0, gains__gains__0,
+    gains_host_set_up(num_receivers, num_baselines, setup_gains_3__config__0, gains__gains__0,
         receiver_pairs__receiver_pairs__0); // setup_ri_pipeline_0_gains_host_set_up_0
 
-    kernel_host_set_up(17/*NUM_KERNELS*/, 108800/*TOTAL_KERNEL_SAMPLES*/, setup_gridding_kernel_5__config__0,
+    kernel_host_set_up(num_kernels, total_kernel_samples, setup_gridding_kernel_5__config__0,
         kernel_supports__gridding_kernel_supports__0, kernels__gridding_kernels__0); // setup_ri_pipeline_0_kernel_host_set_up_0
 
     visibility_host_set_up(num_vis, setup_vis_4__config__0, vis_uvw_coords__vis_coords__0,
@@ -2197,13 +2205,13 @@ void* computationThread_Core0(void *arg) {
     clean_psf_host_set_up(grid_size/*GRID_SIZE*/, 0/*GAUSSIAN_CLEAN_PSF*/, setup_clean_psf_0__config__1,
         setup_clean_psf_0__dirty_psf__1, clean_psf__clean_psf__1, partial_psf_halfdims__input__1); // setup_ri_pipeline_1_clean_psf_set_up_0
 
-    degridding_kernel_host_set_up(17/*NUM_DEGRIDDING_KERNELS*/, 108800/*TOTAL_DEGRIDDING_KERNEL_SAMPLES*/,
+    degridding_kernel_host_set_up(num_kernels, total_kernel_samples,
         setup_degridding_kernel_2__config__1, degridding_kernel_supports__supports__1, degridding_kernels__kernels__1); // setup_ri_pipeline_1_degridding_kernel_host_set_up_0
 
-    gains_host_set_up(512/*NUM_RECEIVERS*/, 130816/*NUM_BASELINES*/, setup_gains_3__config__1, gains__gains__1,
+    gains_host_set_up(num_receivers, num_baselines, setup_gains_3__config__1, gains__gains__1,
         receiver_pairs__receiver_pairs__1); // setup_ri_pipeline_1_gains_host_set_up_0
 
-    kernel_host_set_up(17/*NUM_KERNELS*/, 108800/*TOTAL_KERNEL_SAMPLES*/, setup_gridding_kernel_5__config__1,
+    kernel_host_set_up(num_kernels, total_kernel_samples, setup_gridding_kernel_5__config__1,
         kernel_supports__gridding_kernel_supports__1, kernels__gridding_kernels__1); // setup_ri_pipeline_1_kernel_host_set_up_0
 
     visibility_host_set_up(num_vis, setup_vis_4__config__1, vis_uvw_coords__vis_coords__1,
@@ -2212,13 +2220,13 @@ void* computationThread_Core0(void *arg) {
     clean_psf_host_set_up(grid_size/*GRID_SIZE*/, 0/*GAUSSIAN_CLEAN_PSF*/, setup_clean_psf_0__config__2,
         setup_clean_psf_0__dirty_psf__2, clean_psf__clean_psf__2, partial_psf_halfdims__input__2); // setup_ri_pipeline_2_clean_psf_set_up_0
 
-    degridding_kernel_host_set_up(17/*NUM_DEGRIDDING_KERNELS*/, 108800/*TOTAL_DEGRIDDING_KERNEL_SAMPLES*/,
+    degridding_kernel_host_set_up(num_kernels, total_kernel_samples,
         setup_degridding_kernel_2__config__2, degridding_kernel_supports__supports__2, degridding_kernels__kernels__2); // setup_ri_pipeline_2_degridding_kernel_host_set_up_0
 
-    gains_host_set_up(512/*NUM_RECEIVERS*/, 130816/*NUM_BASELINES*/, setup_gains_3__config__2, gains__gains__2,
+    gains_host_set_up(num_receivers, num_baselines, setup_gains_3__config__2, gains__gains__2,
         receiver_pairs__receiver_pairs__2); // setup_ri_pipeline_2_gains_host_set_up_0
 
-    kernel_host_set_up(17/*NUM_KERNELS*/, 108800/*TOTAL_KERNEL_SAMPLES*/, setup_gridding_kernel_5__config__2,
+    kernel_host_set_up(num_kernels, total_kernel_samples, setup_gridding_kernel_5__config__2,
         kernel_supports__gridding_kernel_supports__2, kernels__gridding_kernels__2); // setup_ri_pipeline_2_kernel_host_set_up_0
 
     visibility_host_set_up(num_vis, setup_vis_4__config__2, vis_uvw_coords__vis_coords__2,
@@ -2227,13 +2235,13 @@ void* computationThread_Core0(void *arg) {
     clean_psf_host_set_up(grid_size/*GRID_SIZE*/, 0/*GAUSSIAN_CLEAN_PSF*/, setup_clean_psf_0__config__3,
         setup_clean_psf_0__dirty_psf__3, clean_psf__clean_psf__3, partial_psf_halfdims__input__3); // setup_ri_pipeline_3_clean_psf_set_up_0
 
-    degridding_kernel_host_set_up(17/*NUM_DEGRIDDING_KERNELS*/, 108800/*TOTAL_DEGRIDDING_KERNEL_SAMPLES*/,
+    degridding_kernel_host_set_up(num_kernels, total_kernel_samples,
         setup_degridding_kernel_2__config__3, degridding_kernel_supports__supports__3, degridding_kernels__kernels__3); // setup_ri_pipeline_3_degridding_kernel_host_set_up_0
 
-    gains_host_set_up(512/*NUM_RECEIVERS*/, 130816/*NUM_BASELINES*/, setup_gains_3__config__3, gains__gains__3,
+    gains_host_set_up(num_receivers, num_baselines, setup_gains_3__config__3, gains__gains__3,
         receiver_pairs__receiver_pairs__3); // setup_ri_pipeline_3_gains_host_set_up_0
 
-    kernel_host_set_up(17/*NUM_KERNELS*/, 108800/*TOTAL_KERNEL_SAMPLES*/, setup_gridding_kernel_5__config__3,
+    kernel_host_set_up(num_kernels, total_kernel_samples, setup_gridding_kernel_5__config__3,
         kernel_supports__gridding_kernel_supports__3, kernels__gridding_kernels__3); // setup_ri_pipeline_3_kernel_host_set_up_0
 
     visibility_host_set_up(num_vis, setup_vis_4__config__3, vis_uvw_coords__vis_coords__3,
@@ -2242,13 +2250,13 @@ void* computationThread_Core0(void *arg) {
     clean_psf_host_set_up(grid_size/*GRID_SIZE*/, 0/*GAUSSIAN_CLEAN_PSF*/, setup_clean_psf_0__config__4,
         setup_clean_psf_0__dirty_psf__4, clean_psf__clean_psf__4, partial_psf_halfdims__input__4); // setup_ri_pipeline_4_clean_psf_set_up_0
 
-    degridding_kernel_host_set_up(17/*NUM_DEGRIDDING_KERNELS*/, 108800/*TOTAL_DEGRIDDING_KERNEL_SAMPLES*/,
+    degridding_kernel_host_set_up(num_kernels, total_kernel_samples,
         setup_degridding_kernel_2__config__4, degridding_kernel_supports__supports__4, degridding_kernels__kernels__4); // setup_ri_pipeline_4_degridding_kernel_host_set_up_0
 
-    gains_host_set_up(512/*NUM_RECEIVERS*/, 130816/*NUM_BASELINES*/, setup_gains_3__config__4, gains__gains__4,
+    gains_host_set_up(num_receivers, num_baselines, setup_gains_3__config__4, gains__gains__4,
         receiver_pairs__receiver_pairs__4); // setup_ri_pipeline_4_gains_host_set_up_0
 
-    kernel_host_set_up(17/*NUM_KERNELS*/, 108800/*TOTAL_KERNEL_SAMPLES*/, setup_gridding_kernel_5__config__4,
+    kernel_host_set_up(num_kernels, total_kernel_samples, setup_gridding_kernel_5__config__4,
         kernel_supports__gridding_kernel_supports__4, kernels__gridding_kernels__4); // setup_ri_pipeline_4_kernel_host_set_up_0
 
     visibility_host_set_up(num_vis, setup_vis_4__config__4, vis_uvw_coords__vis_coords__4,
@@ -2579,35 +2587,35 @@ void* computationThread_Core0(void *arg) {
       memcpy(receiver_pairs_3_3__receiver_pairs__4 + 0, receiver_pairs__receiver_pairs__4 + 0, 1046528); // 130816 * int2
     }
 
-    degridding_kernel_sink(17/*NUM_DEGRIDDING_KERNELS*/, 108800/*TOTAL_DEGRIDDING_KERNEL_SAMPLES*/,
+    degridding_kernel_sink(num_kernels, total_kernel_samples,
         degridding_kernel_supports__supports__0, degridding_kernels__kernels__0); // delta_0_degridding_kernel_sink_0
 #ifdef PREESM_MD5_UPDATE
 		PREESM_MD5_Update(&preesm_md5_ctx_degridding_kernel_supports__supports__0,(char *)degridding_kernel_supports__supports__0, 136);
 		PREESM_MD5_Update(&preesm_md5_ctx_degridding_kernels__kernels__0,(char *)degridding_kernels__kernels__0, 1740800);
 		#endif
 
-    degridding_kernel_sink(17/*NUM_DEGRIDDING_KERNELS*/, 108800/*TOTAL_DEGRIDDING_KERNEL_SAMPLES*/,
+    degridding_kernel_sink(num_kernels, total_kernel_samples,
         degridding_kernel_supports__supports__1, degridding_kernels__kernels__1); // delta_1_degridding_kernel_sink_0
 #ifdef PREESM_MD5_UPDATE
 		PREESM_MD5_Update(&preesm_md5_ctx_degridding_kernel_supports__supports__1,(char *)degridding_kernel_supports__supports__1, 136);
 		PREESM_MD5_Update(&preesm_md5_ctx_degridding_kernels__kernels__1,(char *)degridding_kernels__kernels__1, 1740800);
 		#endif
 
-    degridding_kernel_sink(17/*NUM_DEGRIDDING_KERNELS*/, 108800/*TOTAL_DEGRIDDING_KERNEL_SAMPLES*/,
+    degridding_kernel_sink(num_kernels, total_kernel_samples,
         degridding_kernel_supports__supports__2, degridding_kernels__kernels__2); // delta_2_degridding_kernel_sink_0
 #ifdef PREESM_MD5_UPDATE
 		PREESM_MD5_Update(&preesm_md5_ctx_degridding_kernel_supports__supports__2,(char *)degridding_kernel_supports__supports__2, 136);
 		PREESM_MD5_Update(&preesm_md5_ctx_degridding_kernels__kernels__2,(char *)degridding_kernels__kernels__2, 1740800);
 		#endif
 
-    degridding_kernel_sink(17/*NUM_DEGRIDDING_KERNELS*/, 108800/*TOTAL_DEGRIDDING_KERNEL_SAMPLES*/,
+    degridding_kernel_sink(num_kernels, total_kernel_samples,
         degridding_kernel_supports__supports__3, degridding_kernels__kernels__3); // delta_3_degridding_kernel_sink_0
 #ifdef PREESM_MD5_UPDATE
 		PREESM_MD5_Update(&preesm_md5_ctx_degridding_kernel_supports__supports__3,(char *)degridding_kernel_supports__supports__3, 136);
 		PREESM_MD5_Update(&preesm_md5_ctx_degridding_kernels__kernels__3,(char *)degridding_kernels__kernels__3, 1740800);
 		#endif
 
-    degridding_kernel_sink(17/*NUM_DEGRIDDING_KERNELS*/, 108800/*TOTAL_DEGRIDDING_KERNEL_SAMPLES*/,
+    degridding_kernel_sink(num_kernels, total_kernel_samples,
         degridding_kernel_supports__supports__4, degridding_kernels__kernels__4); // delta_4_degridding_kernel_sink_0
 #ifdef PREESM_MD5_UPDATE
 		PREESM_MD5_Update(&preesm_md5_ctx_degridding_kernel_supports__supports__4,(char *)degridding_kernel_supports__supports__4, 136);
@@ -3244,19 +3252,19 @@ void* computationThread_Core0(void *arg) {
       memcpy(output2_1__config__4 + 0, ifft_0__input__4 + 0, 400); // 1 * Config
     }
 
-    dft_actor(981120/*NUM_VISIBILITIES*/, 200/*NUM_MAX_SOURCES*/, source_list_0_3__sources__0,
+    dft_actor(num_vis, num_minor_cycle, source_list_0_3__sources__0,
         output_dft_0__vis_uvw_coords__0, num_sources_in_0_3__num_sources__0, output_dft_0__config__0,
         visibilities__v2__0); // delta_0_dft_run_0_dft_actor_0
 
-    dft_actor(981120/*NUM_VISIBILITIES*/, 200/*NUM_MAX_SOURCES*/, source_list_1_3__sources__0,
+    dft_actor(num_vis, num_minor_cycle, source_list_1_3__sources__0,
         output_dft_0__vis_uvw_coords__1, num_sources_in_1_3__num_sources__0, output_dft_0__config__1,
         visibilities__v2__1); // delta_0_dft_run_1_dft_actor_0
 
-    dft_actor(981120/*NUM_VISIBILITIES*/, 200/*NUM_MAX_SOURCES*/, source_list_2_3__sources__0,
+    dft_actor(num_vis, num_minor_cycle, source_list_2_3__sources__0,
         output_dft_0__vis_uvw_coords__2, num_sources_in_2_3__num_sources__0, output_dft_0__config__2,
         visibilities__v2__2); // delta_0_dft_run_2_dft_actor_0
 
-    dft_actor(981120/*NUM_VISIBILITIES*/, 200/*NUM_MAX_SOURCES*/, source_list_3_3__sources__0,
+    dft_actor(num_vis, num_minor_cycle, source_list_3_3__sources__0,
         output_dft_0__vis_uvw_coords__3, num_sources_in_3_3__num_sources__0, output_dft_0__config__3,
         visibilities__v2__3); // delta_0_dft_run_3_dft_actor_0
 
@@ -3440,62 +3448,62 @@ void* computationThread_Core0(void *arg) {
       memcpy(output2_1__config__24 + 0, output_gainsapply_1__input__19 + 0, 400); // 1 * Config
     }
 
-    reciprocal_transform_actor(512/*NUM_RECEIVERS*/, gains_0_3__gains_in__0, output1_0__config__5, gains_out__gains__0); // delta_0_subtraction_run_0_reciprocal_transform_actor_0
+    reciprocal_transform_actor(num_receivers, gains_0_3__gains_in__0, output1_0__config__5, gains_out__gains__0); // delta_0_subtraction_run_0_reciprocal_transform_actor_0
 
-    reciprocal_transform_actor(512/*NUM_RECEIVERS*/, gains_1_3__gains_in__0, output1_0__config__6, gains_out__gains__1); // delta_0_subtraction_run_1_reciprocal_transform_actor_0
+    reciprocal_transform_actor(num_receivers, gains_1_3__gains_in__0, output1_0__config__6, gains_out__gains__1); // delta_0_subtraction_run_1_reciprocal_transform_actor_0
 
-    reciprocal_transform_actor(512/*NUM_RECEIVERS*/, gains_2_3__gains_in__0, output1_0__config__7, gains_out__gains__2); // delta_0_subtraction_run_2_reciprocal_transform_actor_0
+    reciprocal_transform_actor(num_receivers, gains_2_3__gains_in__0, output1_0__config__7, gains_out__gains__2); // delta_0_subtraction_run_2_reciprocal_transform_actor_0
 
-    reciprocal_transform_actor(512/*NUM_RECEIVERS*/, gains_3_3__gains_in__0, output1_0__config__8, gains_out__gains__3); // delta_0_subtraction_run_3_reciprocal_transform_actor_0
+    reciprocal_transform_actor(num_receivers, gains_3_3__gains_in__0, output1_0__config__8, gains_out__gains__3); // delta_0_subtraction_run_3_reciprocal_transform_actor_0
 
-    reciprocal_transform_actor(512/*NUM_RECEIVERS*/, gains_0_3__gains_in__1, output1_0__config__9, gains_out__gains__4); // delta_1_subtraction_run_0_reciprocal_transform_actor_0
+    reciprocal_transform_actor(num_receivers, gains_0_3__gains_in__1, output1_0__config__9, gains_out__gains__4); // delta_1_subtraction_run_0_reciprocal_transform_actor_0
 
-    reciprocal_transform_actor(512/*NUM_RECEIVERS*/, gains_1_3__gains_in__1, output1_0__config__10,
+    reciprocal_transform_actor(num_receivers, gains_1_3__gains_in__1, output1_0__config__10,
         gains_out__gains__5); // delta_1_subtraction_run_1_reciprocal_transform_actor_0
 
-    reciprocal_transform_actor(512/*NUM_RECEIVERS*/, gains_2_3__gains_in__1, output1_0__config__11,
+    reciprocal_transform_actor(num_receivers, gains_2_3__gains_in__1, output1_0__config__11,
         gains_out__gains__6); // delta_1_subtraction_run_2_reciprocal_transform_actor_0
 
-    reciprocal_transform_actor(512/*NUM_RECEIVERS*/, gains_3_3__gains_in__1, output1_0__config__12,
+    reciprocal_transform_actor(num_receivers, gains_3_3__gains_in__1, output1_0__config__12,
         gains_out__gains__7); // delta_1_subtraction_run_3_reciprocal_transform_actor_0
 
-    reciprocal_transform_actor(512/*NUM_RECEIVERS*/, gains_0_3__gains_in__2, output1_0__config__13,
+    reciprocal_transform_actor(num_receivers, gains_0_3__gains_in__2, output1_0__config__13,
         gains_out__gains__8); // delta_2_subtraction_run_0_reciprocal_transform_actor_0
 
-    reciprocal_transform_actor(512/*NUM_RECEIVERS*/, gains_1_3__gains_in__2, output1_0__config__14,
+    reciprocal_transform_actor(num_receivers, gains_1_3__gains_in__2, output1_0__config__14,
         gains_out__gains__9); // delta_2_subtraction_run_1_reciprocal_transform_actor_0
 
-    reciprocal_transform_actor(512/*NUM_RECEIVERS*/, gains_2_3__gains_in__2, output1_0__config__15,
+    reciprocal_transform_actor(num_receivers, gains_2_3__gains_in__2, output1_0__config__15,
         gains_out__gains__10); // delta_2_subtraction_run_2_reciprocal_transform_actor_0
 
-    reciprocal_transform_actor(512/*NUM_RECEIVERS*/, gains_3_3__gains_in__2, output1_0__config__16,
+    reciprocal_transform_actor(num_receivers, gains_3_3__gains_in__2, output1_0__config__16,
         gains_out__gains__11); // delta_2_subtraction_run_3_reciprocal_transform_actor_0
 
-    reciprocal_transform_actor(512/*NUM_RECEIVERS*/, gains_0_3__gains_in__3, output1_0__config__17,
+    reciprocal_transform_actor(num_receivers, gains_0_3__gains_in__3, output1_0__config__17,
         gains_out__gains__12); // delta_3_subtraction_run_0_reciprocal_transform_actor_0
 
-    reciprocal_transform_actor(512/*NUM_RECEIVERS*/, gains_1_3__gains_in__3, output1_0__config__18,
+    reciprocal_transform_actor(num_receivers, gains_1_3__gains_in__3, output1_0__config__18,
         gains_out__gains__13); // delta_3_subtraction_run_1_reciprocal_transform_actor_0
 
-    reciprocal_transform_actor(512/*NUM_RECEIVERS*/, gains_2_3__gains_in__3, output1_0__config__19,
+    reciprocal_transform_actor(num_receivers, gains_2_3__gains_in__3, output1_0__config__19,
         gains_out__gains__14); // delta_3_subtraction_run_2_reciprocal_transform_actor_0
 
-    reciprocal_transform_actor(512/*NUM_RECEIVERS*/, gains_3_3__gains_in__3, output1_0__config__20,
+    reciprocal_transform_actor(num_receivers, gains_3_3__gains_in__3, output1_0__config__20,
         gains_out__gains__15); // delta_3_subtraction_run_3_reciprocal_transform_actor_0
 
-    reciprocal_transform_actor(512/*NUM_RECEIVERS*/, gains_0_3__gains_in__4, output1_0__config__21,
+    reciprocal_transform_actor(num_receivers, gains_0_3__gains_in__4, output1_0__config__21,
         gains_out__gains__16); // delta_4_subtraction_run_0_reciprocal_transform_actor_0
 
-    reciprocal_transform_actor(512/*NUM_RECEIVERS*/, gains_1_3__gains_in__4, output1_0__config__22,
+    reciprocal_transform_actor(num_receivers, gains_1_3__gains_in__4, output1_0__config__22,
         gains_out__gains__17); // delta_4_subtraction_run_1_reciprocal_transform_actor_0
 
-    reciprocal_transform_actor(512/*NUM_RECEIVERS*/, gains_2_3__gains_in__4, output1_0__config__23,
+    reciprocal_transform_actor(num_receivers, gains_2_3__gains_in__4, output1_0__config__23,
         gains_out__gains__18); // delta_4_subtraction_run_2_reciprocal_transform_actor_0
 
-    reciprocal_transform_actor(512/*NUM_RECEIVERS*/, gains_3_3__gains_in__4, output1_0__config__24,
+    reciprocal_transform_actor(num_receivers, gains_3_3__gains_in__4, output1_0__config__24,
         gains_out__gains__19); // delta_4_subtraction_run_3_reciprocal_transform_actor_0
 
-    add_visibilities(981120/*NUM_VISIBILITIES*/, v1__v1__0, visibilities__v2__0, output__input__0); // delta_0_add_visibilities_0
+    add_visibilities(num_vis, v1__v1__0, visibilities__v2__0, output__input__0); // delta_0_add_visibilities_0
 
     // Broadcast delta_0_Broadcast_added_vis_0
 
@@ -3506,9 +3514,9 @@ void* computationThread_Core0(void *arg) {
       memcpy(subtract_1__visibilities_in__0 + 0, output__input__0 + 0, 15697920); // 981120 * PRECISION2
     }
 
-    add_visibilities(981120/*NUM_VISIBILITIES*/, add_0__v1__0, visibilities__v2__1, output__input__1); // delta_0_add_visibilities_1
+    add_visibilities(num_vis, add_0__v1__0, visibilities__v2__1, output__input__1); // delta_0_add_visibilities_1
 
-    subtract_from_measurements(512/*NUM_RECEIVERS*/, 130816/*NUM_BASELINES*/, 981120/*NUM_VISIBILITIES*/,
+    subtract_from_measurements(num_receivers, num_baselines, num_vis,
         visibilities_0__measured_vis__0, subtract_1__visibilities_in__0, gains_out__gains__0,
         receiver_pairs_0_3__receiver_pairs__0, output2_1__config__5, visibilities_out__visibilities__0); // delta_0_subtraction_run_0_subtraction_0
 
@@ -3521,9 +3529,9 @@ void* computationThread_Core0(void *arg) {
       memcpy(subtract_1__visibilities_in__1 + 0, output__input__1 + 0, 15697920); // 981120 * PRECISION2
     }
 
-    add_visibilities(981120/*NUM_VISIBILITIES*/, add_0__v1__1, visibilities__v2__2, output__input__2); // delta_0_add_visibilities_2
+    add_visibilities(num_vis, add_0__v1__1, visibilities__v2__2, output__input__2); // delta_0_add_visibilities_2
 
-    subtract_from_measurements(512/*NUM_RECEIVERS*/, 130816/*NUM_BASELINES*/, 981120/*NUM_VISIBILITIES*/,
+    subtract_from_measurements(num_receivers, num_baselines, num_vis,
         visibilities_1__measured_vis__0, subtract_1__visibilities_in__1, gains_out__gains__1,
         receiver_pairs_1_3__receiver_pairs__0, output2_1__config__6, visibilities_out__visibilities__1); // delta_0_subtraction_run_1_subtraction_0
 
@@ -3536,9 +3544,9 @@ void* computationThread_Core0(void *arg) {
       memcpy(subtract_1__visibilities_in__2 + 0, output__input__2 + 0, 15697920); // 981120 * PRECISION2
     }
 
-    add_visibilities(981120/*NUM_VISIBILITIES*/, add_0__v1__2, visibilities__v2__3, output__input__3); // delta_0_add_visibilities_3
+    add_visibilities(num_vis, add_0__v1__2, visibilities__v2__3, output__input__3); // delta_0_add_visibilities_3
 
-    subtract_from_measurements(512/*NUM_RECEIVERS*/, 130816/*NUM_BASELINES*/, 981120/*NUM_VISIBILITIES*/,
+    subtract_from_measurements(num_receivers, num_baselines, num_vis,
         visibilities_2__measured_vis__0, subtract_1__visibilities_in__2, gains_out__gains__2,
         receiver_pairs_2_3__receiver_pairs__0, output2_1__config__7, visibilities_out__visibilities__2); // delta_0_subtraction_run_2_subtraction_0
 
@@ -3551,26 +3559,26 @@ void* computationThread_Core0(void *arg) {
       memcpy(subtract_1__visibilities_in__3 + 0, output__input__3 + 0, 15697920); // 981120 * PRECISION2
     }
 
-    subtract_from_measurements(512/*NUM_RECEIVERS*/, 130816/*NUM_BASELINES*/, 981120/*NUM_VISIBILITIES*/,
+    subtract_from_measurements(num_receivers, num_baselines, num_vis,
         visibilities_3__measured_vis__0, subtract_1__visibilities_in__3, gains_out__gains__3,
         receiver_pairs_3_3__receiver_pairs__0, output2_1__config__8, visibilities_out__visibilities__3); // delta_0_subtraction_run_3_subtraction_0
 
-    gridding_actor(grid_size/*GRID_SIZE*/, 981120/*NUM_VISIBILITIES*/, 17/*NUM_KERNELS*/, 108800/*TOTAL_KERNEL_SAMPLES*/,
+    gridding_actor(grid_size/*GRID_SIZE*/, num_vis, num_kernels, total_kernel_samples,
         gridding_kernels_0_3__kernels__0, gridding_kernel_supports_0_3__kernel_supports__0,
         output_gridding_1__vis_uvw_coords__0, visibilities_out__visibilities__0, output_gridding_2__config__0,
         uv_grid__grids_0__0); // delta_0_gridding_run_0_gridding_actor_0
 
-    gridding_actor(grid_size/*GRID_SIZE*/, 981120/*NUM_VISIBILITIES*/, 17/*NUM_KERNELS*/, 108800/*TOTAL_KERNEL_SAMPLES*/,
+    gridding_actor(grid_size/*GRID_SIZE*/, num_vis, num_kernels, total_kernel_samples,
         gridding_kernels_1_3__kernels__0, gridding_kernel_supports_1_3__kernel_supports__0,
         output_gridding_1__vis_uvw_coords__1, visibilities_out__visibilities__1, output_gridding_2__config__1,
         uv_grid__grids_1__0); // delta_0_gridding_run_1_gridding_actor_0
 
-    gridding_actor(grid_size/*GRID_SIZE*/, 981120/*NUM_VISIBILITIES*/, 17/*NUM_KERNELS*/, 108800/*TOTAL_KERNEL_SAMPLES*/,
+    gridding_actor(grid_size/*GRID_SIZE*/, num_vis, num_kernels, total_kernel_samples,
         gridding_kernels_2_3__kernels__0, gridding_kernel_supports_2_3__kernel_supports__0,
         output_gridding_1__vis_uvw_coords__2, visibilities_out__visibilities__2, output_gridding_2__config__2,
         uv_grid__grids_2__0); // delta_0_gridding_run_2_gridding_actor_0
 
-    gridding_actor(grid_size/*GRID_SIZE*/, 981120/*NUM_VISIBILITIES*/, 17/*NUM_KERNELS*/, 108800/*TOTAL_KERNEL_SAMPLES*/,
+    gridding_actor(grid_size/*GRID_SIZE*/, num_vis, num_kernels, total_kernel_samples,
         gridding_kernels_3_3__kernels__0, gridding_kernel_supports_3_3__kernel_supports__0,
         output_gridding_1__vis_uvw_coords__3, visibilities_out__visibilities__3, output_gridding_2__config__3,
         uv_grid__grids_3__0); // delta_0_gridding_run_3_gridding_actor_0
@@ -3644,19 +3652,19 @@ void* computationThread_Core0(void *arg) {
       memcpy(save_1__model__0 + 0, output_model__input__0 + 0, 33554432); // 4194304 * PRECISION
     }
 
-    dft_actor(981120/*NUM_VISIBILITIES*/, 200/*NUM_MAX_SOURCES*/, source_list_0_3__sources__1,
+    dft_actor(num_vis, num_minor_cycle, source_list_0_3__sources__1,
         output_dft_0__vis_uvw_coords__4, num_sources_in_0_3__num_sources__1, output_dft_0__config__4,
         visibilities__v2__4); // delta_1_dft_run_0_dft_actor_0
 
-    dft_actor(981120/*NUM_VISIBILITIES*/, 200/*NUM_MAX_SOURCES*/, source_list_1_3__sources__1,
+    dft_actor(num_vis, num_minor_cycle, source_list_1_3__sources__1,
         output_dft_0__vis_uvw_coords__5, num_sources_in_1_3__num_sources__1, output_dft_0__config__5,
         visibilities__v2__5); // delta_1_dft_run_1_dft_actor_0
 
-    dft_actor(981120/*NUM_VISIBILITIES*/, 200/*NUM_MAX_SOURCES*/, source_list_2_3__sources__1,
+    dft_actor(num_vis, num_minor_cycle, source_list_2_3__sources__1,
         output_dft_0__vis_uvw_coords__6, num_sources_in_2_3__num_sources__1, output_dft_0__config__6,
         visibilities__v2__6); // delta_1_dft_run_2_dft_actor_0
 
-    dft_actor(981120/*NUM_VISIBILITIES*/, 200/*NUM_MAX_SOURCES*/, source_list_3_3__sources__1,
+    dft_actor(num_vis, num_minor_cycle, source_list_3_3__sources__1,
         output_dft_0__vis_uvw_coords__7, num_sources_in_3_3__num_sources__1, output_dft_0__config__7,
         visibilities__v2__7); // delta_1_dft_run_3_dft_actor_0
 
@@ -3674,7 +3682,7 @@ void* computationThread_Core0(void *arg) {
 		PREESM_MD5_Update(&preesm_md5_ctx_save_2__psf__0,(char *)save_2__psf__0, 33554432);
 		#endif
 
-    add_visibilities(981120/*NUM_VISIBILITIES*/, add_0_0__v1__0, visibilities__v2__4, output__input__4); // delta_1_add_visibilities_0
+    add_visibilities(num_vis, add_0_0__v1__0, visibilities__v2__4, output__input__4); // delta_1_add_visibilities_0
 
     // Broadcast delta_1_Broadcast_added_vis_0
 
@@ -3685,9 +3693,9 @@ void* computationThread_Core0(void *arg) {
       memcpy(subtract_1__visibilities_in__4 + 0, output__input__4 + 0, 15697920); // 981120 * PRECISION2
     }
 
-    add_visibilities(981120/*NUM_VISIBILITIES*/, add_0__v1__3, visibilities__v2__5, output__input__5); // delta_1_add_visibilities_1
+    add_visibilities(num_vis, add_0__v1__3, visibilities__v2__5, output__input__5); // delta_1_add_visibilities_1
 
-    subtract_from_measurements(512/*NUM_RECEIVERS*/, 130816/*NUM_BASELINES*/, 981120/*NUM_VISIBILITIES*/,
+    subtract_from_measurements(num_receivers, num_baselines, num_vis,
         visibilities_0__measured_vis__1, subtract_1__visibilities_in__4, gains_out__gains__4,
         receiver_pairs_0_3__receiver_pairs__1, output2_1__config__9, visibilities_out__visibilities__4); // delta_1_subtraction_run_0_subtraction_0
 
@@ -3700,9 +3708,9 @@ void* computationThread_Core0(void *arg) {
       memcpy(subtract_1__visibilities_in__5 + 0, output__input__5 + 0, 15697920); // 981120 * PRECISION2
     }
 
-    add_visibilities(981120/*NUM_VISIBILITIES*/, add_0__v1__4, visibilities__v2__6, output__input__6); // delta_1_add_visibilities_2
+    add_visibilities(num_vis, add_0__v1__4, visibilities__v2__6, output__input__6); // delta_1_add_visibilities_2
 
-    subtract_from_measurements(512/*NUM_RECEIVERS*/, 130816/*NUM_BASELINES*/, 981120/*NUM_VISIBILITIES*/,
+    subtract_from_measurements(num_receivers, num_baselines, num_vis,
         visibilities_1__measured_vis__1, subtract_1__visibilities_in__5, gains_out__gains__5,
         receiver_pairs_1_3__receiver_pairs__1, output2_1__config__10, visibilities_out__visibilities__5); // delta_1_subtraction_run_1_subtraction_0
 
@@ -3715,9 +3723,9 @@ void* computationThread_Core0(void *arg) {
       memcpy(subtract_1__visibilities_in__6 + 0, output__input__6 + 0, 15697920); // 981120 * PRECISION2
     }
 
-    add_visibilities(981120/*NUM_VISIBILITIES*/, add_0__v1__5, visibilities__v2__7, output__input__7); // delta_1_add_visibilities_3
+    add_visibilities(num_vis, add_0__v1__5, visibilities__v2__7, output__input__7); // delta_1_add_visibilities_3
 
-    subtract_from_measurements(512/*NUM_RECEIVERS*/, 130816/*NUM_BASELINES*/, 981120/*NUM_VISIBILITIES*/,
+    subtract_from_measurements(num_receivers, num_baselines, num_vis,
         visibilities_2__measured_vis__1, subtract_1__visibilities_in__6, gains_out__gains__6,
         receiver_pairs_2_3__receiver_pairs__1, output2_1__config__11, visibilities_out__visibilities__6); // delta_1_subtraction_run_2_subtraction_0
 
@@ -3730,26 +3738,26 @@ void* computationThread_Core0(void *arg) {
       memcpy(subtract_1__visibilities_in__7 + 0, output__input__7 + 0, 15697920); // 981120 * PRECISION2
     }
 
-    subtract_from_measurements(512/*NUM_RECEIVERS*/, 130816/*NUM_BASELINES*/, 981120/*NUM_VISIBILITIES*/,
+    subtract_from_measurements(num_receivers, num_baselines, num_vis,
         visibilities_3__measured_vis__1, subtract_1__visibilities_in__7, gains_out__gains__7,
         receiver_pairs_3_3__receiver_pairs__1, output2_1__config__12, visibilities_out__visibilities__7); // delta_1_subtraction_run_3_subtraction_0
 
-    gridding_actor(grid_size/*GRID_SIZE*/, 981120/*NUM_VISIBILITIES*/, 17/*NUM_KERNELS*/, 108800/*TOTAL_KERNEL_SAMPLES*/,
+    gridding_actor(grid_size/*GRID_SIZE*/, num_vis, num_kernels, total_kernel_samples,
         gridding_kernels_0_3__kernels__1, gridding_kernel_supports_0_3__kernel_supports__1,
         output_gridding_1__vis_uvw_coords__4, visibilities_out__visibilities__4, output_gridding_2__config__4,
         uv_grid__grids_0__1); // delta_1_gridding_run_0_gridding_actor_0
 
-    gridding_actor(grid_size/*GRID_SIZE*/, 981120/*NUM_VISIBILITIES*/, 17/*NUM_KERNELS*/, 108800/*TOTAL_KERNEL_SAMPLES*/,
+    gridding_actor(grid_size/*GRID_SIZE*/, num_vis, num_kernels, total_kernel_samples,
         gridding_kernels_1_3__kernels__1, gridding_kernel_supports_1_3__kernel_supports__1,
         output_gridding_1__vis_uvw_coords__5, visibilities_out__visibilities__5, output_gridding_2__config__5,
         uv_grid__grids_1__1); // delta_1_gridding_run_1_gridding_actor_0
 
-    gridding_actor(grid_size/*GRID_SIZE*/, 981120/*NUM_VISIBILITIES*/, 17/*NUM_KERNELS*/, 108800/*TOTAL_KERNEL_SAMPLES*/,
+    gridding_actor(grid_size/*GRID_SIZE*/, num_vis, num_kernels, total_kernel_samples,
         gridding_kernels_2_3__kernels__1, gridding_kernel_supports_2_3__kernel_supports__1,
         output_gridding_1__vis_uvw_coords__6, visibilities_out__visibilities__6, output_gridding_2__config__6,
         uv_grid__grids_2__1); // delta_1_gridding_run_2_gridding_actor_0
 
-    gridding_actor(grid_size/*GRID_SIZE*/, 981120/*NUM_VISIBILITIES*/, 17/*NUM_KERNELS*/, 108800/*TOTAL_KERNEL_SAMPLES*/,
+    gridding_actor(grid_size/*GRID_SIZE*/, num_vis, num_kernels, total_kernel_samples,
         gridding_kernels_3_3__kernels__1, gridding_kernel_supports_3_3__kernel_supports__1,
         output_gridding_1__vis_uvw_coords__7, visibilities_out__visibilities__7, output_gridding_2__config__7,
         uv_grid__grids_3__1); // delta_1_gridding_run_3_gridding_actor_0
@@ -3823,19 +3831,19 @@ void* computationThread_Core0(void *arg) {
       memcpy(save_1__model__1 + 0, output_model__input__1 + 0, 33554432); // 4194304 * PRECISION
     }
 
-    dft_actor(981120/*NUM_VISIBILITIES*/, 200/*NUM_MAX_SOURCES*/, source_list_0_3__sources__2,
+    dft_actor(num_vis, num_minor_cycle, source_list_0_3__sources__2,
         output_dft_0__vis_uvw_coords__8, num_sources_in_0_3__num_sources__2, output_dft_0__config__8,
         visibilities__v2__8); // delta_2_dft_run_0_dft_actor_0
 
-    dft_actor(981120/*NUM_VISIBILITIES*/, 200/*NUM_MAX_SOURCES*/, source_list_1_3__sources__2,
+    dft_actor(num_vis, num_minor_cycle, source_list_1_3__sources__2,
         output_dft_0__vis_uvw_coords__9, num_sources_in_1_3__num_sources__2, output_dft_0__config__9,
         visibilities__v2__9); // delta_2_dft_run_1_dft_actor_0
 
-    dft_actor(981120/*NUM_VISIBILITIES*/, 200/*NUM_MAX_SOURCES*/, source_list_2_3__sources__2,
+    dft_actor(num_vis, num_minor_cycle, source_list_2_3__sources__2,
         output_dft_0__vis_uvw_coords__10, num_sources_in_2_3__num_sources__2, output_dft_0__config__10,
         visibilities__v2__10); // delta_2_dft_run_2_dft_actor_0
 
-    dft_actor(981120/*NUM_VISIBILITIES*/, 200/*NUM_MAX_SOURCES*/, source_list_3_3__sources__2,
+    dft_actor(num_vis, num_minor_cycle, source_list_3_3__sources__2,
         output_dft_0__vis_uvw_coords__11, num_sources_in_3_3__num_sources__2, output_dft_0__config__11,
         visibilities__v2__11); // delta_2_dft_run_3_dft_actor_0
 
@@ -3853,7 +3861,7 @@ void* computationThread_Core0(void *arg) {
 		PREESM_MD5_Update(&preesm_md5_ctx_save_2__psf__1,(char *)save_2__psf__1, 33554432);
 		#endif
 
-    add_visibilities(981120/*NUM_VISIBILITIES*/, add_0_0__v1__1, visibilities__v2__8, output__input__8); // delta_2_add_visibilities_0
+    add_visibilities(num_vis, add_0_0__v1__1, visibilities__v2__8, output__input__8); // delta_2_add_visibilities_0
 
     // Broadcast delta_2_Broadcast_added_vis_0
 
@@ -3864,9 +3872,9 @@ void* computationThread_Core0(void *arg) {
       memcpy(subtract_1__visibilities_in__8 + 0, output__input__8 + 0, 15697920); // 981120 * PRECISION2
     }
 
-    add_visibilities(981120/*NUM_VISIBILITIES*/, add_0__v1__6, visibilities__v2__9, output__input__9); // delta_2_add_visibilities_1
+    add_visibilities(num_vis, add_0__v1__6, visibilities__v2__9, output__input__9); // delta_2_add_visibilities_1
 
-    subtract_from_measurements(512/*NUM_RECEIVERS*/, 130816/*NUM_BASELINES*/, 981120/*NUM_VISIBILITIES*/,
+    subtract_from_measurements(num_receivers, num_baselines, num_vis,
         visibilities_0__measured_vis__2, subtract_1__visibilities_in__8, gains_out__gains__8,
         receiver_pairs_0_3__receiver_pairs__2, output2_1__config__13, visibilities_out__visibilities__8); // delta_2_subtraction_run_0_subtraction_0
 
@@ -3879,9 +3887,9 @@ void* computationThread_Core0(void *arg) {
       memcpy(subtract_1__visibilities_in__9 + 0, output__input__9 + 0, 15697920); // 981120 * PRECISION2
     }
 
-    add_visibilities(981120/*NUM_VISIBILITIES*/, add_0__v1__7, visibilities__v2__10, output__input__10); // delta_2_add_visibilities_2
+    add_visibilities(num_vis, add_0__v1__7, visibilities__v2__10, output__input__10); // delta_2_add_visibilities_2
 
-    subtract_from_measurements(512/*NUM_RECEIVERS*/, 130816/*NUM_BASELINES*/, 981120/*NUM_VISIBILITIES*/,
+    subtract_from_measurements(num_receivers, num_baselines, num_vis,
         visibilities_1__measured_vis__2, subtract_1__visibilities_in__9, gains_out__gains__9,
         receiver_pairs_1_3__receiver_pairs__2, output2_1__config__14, visibilities_out__visibilities__9); // delta_2_subtraction_run_1_subtraction_0
 
@@ -3894,9 +3902,9 @@ void* computationThread_Core0(void *arg) {
       memcpy(subtract_1__visibilities_in__10 + 0, output__input__10 + 0, 15697920); // 981120 * PRECISION2
     }
 
-    add_visibilities(981120/*NUM_VISIBILITIES*/, add_0__v1__8, visibilities__v2__11, output__input__11); // delta_2_add_visibilities_3
+    add_visibilities(num_vis, add_0__v1__8, visibilities__v2__11, output__input__11); // delta_2_add_visibilities_3
 
-    subtract_from_measurements(512/*NUM_RECEIVERS*/, 130816/*NUM_BASELINES*/, 981120/*NUM_VISIBILITIES*/,
+    subtract_from_measurements(num_receivers, num_baselines, num_vis,
         visibilities_2__measured_vis__2, subtract_1__visibilities_in__10, gains_out__gains__10,
         receiver_pairs_2_3__receiver_pairs__2, output2_1__config__15, visibilities_out__visibilities__10); // delta_2_subtraction_run_2_subtraction_0
 
@@ -3909,26 +3917,26 @@ void* computationThread_Core0(void *arg) {
       memcpy(subtract_1__visibilities_in__11 + 0, output__input__11 + 0, 15697920); // 981120 * PRECISION2
     }
 
-    subtract_from_measurements(512/*NUM_RECEIVERS*/, 130816/*NUM_BASELINES*/, 981120/*NUM_VISIBILITIES*/,
+    subtract_from_measurements(num_receivers, num_baselines, num_vis,
         visibilities_3__measured_vis__2, subtract_1__visibilities_in__11, gains_out__gains__11,
         receiver_pairs_3_3__receiver_pairs__2, output2_1__config__16, visibilities_out__visibilities__11); // delta_2_subtraction_run_3_subtraction_0
 
-    gridding_actor(grid_size/*GRID_SIZE*/, 981120/*NUM_VISIBILITIES*/, 17/*NUM_KERNELS*/, 108800/*TOTAL_KERNEL_SAMPLES*/,
+    gridding_actor(grid_size/*GRID_SIZE*/, num_vis, num_kernels, total_kernel_samples,
         gridding_kernels_0_3__kernels__2, gridding_kernel_supports_0_3__kernel_supports__2,
         output_gridding_1__vis_uvw_coords__8, visibilities_out__visibilities__8, output_gridding_2__config__8,
         uv_grid__grids_0__2); // delta_2_gridding_run_0_gridding_actor_0
 
-    gridding_actor(grid_size/*GRID_SIZE*/, 981120/*NUM_VISIBILITIES*/, 17/*NUM_KERNELS*/, 108800/*TOTAL_KERNEL_SAMPLES*/,
+    gridding_actor(grid_size/*GRID_SIZE*/, num_vis, num_kernels, total_kernel_samples,
         gridding_kernels_1_3__kernels__2, gridding_kernel_supports_1_3__kernel_supports__2,
         output_gridding_1__vis_uvw_coords__9, visibilities_out__visibilities__9, output_gridding_2__config__9,
         uv_grid__grids_1__2); // delta_2_gridding_run_1_gridding_actor_0
 
-    gridding_actor(grid_size/*GRID_SIZE*/, 981120/*NUM_VISIBILITIES*/, 17/*NUM_KERNELS*/, 108800/*TOTAL_KERNEL_SAMPLES*/,
+    gridding_actor(grid_size/*GRID_SIZE*/, num_vis, num_kernels, total_kernel_samples,
         gridding_kernels_2_3__kernels__2, gridding_kernel_supports_2_3__kernel_supports__2,
         output_gridding_1__vis_uvw_coords__10, visibilities_out__visibilities__10, output_gridding_2__config__10,
         uv_grid__grids_2__2); // delta_2_gridding_run_2_gridding_actor_0
 
-    gridding_actor(grid_size/*GRID_SIZE*/, 981120/*NUM_VISIBILITIES*/, 17/*NUM_KERNELS*/, 108800/*TOTAL_KERNEL_SAMPLES*/,
+    gridding_actor(grid_size/*GRID_SIZE*/, num_vis, num_kernels, total_kernel_samples,
         gridding_kernels_3_3__kernels__2, gridding_kernel_supports_3_3__kernel_supports__2,
         output_gridding_1__vis_uvw_coords__11, visibilities_out__visibilities__11, output_gridding_2__config__11,
         uv_grid__grids_3__2); // delta_2_gridding_run_3_gridding_actor_0
@@ -4002,19 +4010,19 @@ void* computationThread_Core0(void *arg) {
       memcpy(save_1__model__2 + 0, output_model__input__2 + 0, 33554432); // 4194304 * PRECISION
     }
 
-    dft_actor(981120/*NUM_VISIBILITIES*/, 200/*NUM_MAX_SOURCES*/, source_list_0_3__sources__3,
+    dft_actor(num_vis, num_minor_cycle, source_list_0_3__sources__3,
         output_dft_0__vis_uvw_coords__12, num_sources_in_0_3__num_sources__3, output_dft_0__config__12,
         visibilities__v2__12); // delta_3_dft_run_0_dft_actor_0
 
-    dft_actor(981120/*NUM_VISIBILITIES*/, 200/*NUM_MAX_SOURCES*/, source_list_1_3__sources__3,
+    dft_actor(num_vis, num_minor_cycle, source_list_1_3__sources__3,
         output_dft_0__vis_uvw_coords__13, num_sources_in_1_3__num_sources__3, output_dft_0__config__13,
         visibilities__v2__13); // delta_3_dft_run_1_dft_actor_0
 
-    dft_actor(981120/*NUM_VISIBILITIES*/, 200/*NUM_MAX_SOURCES*/, source_list_2_3__sources__3,
+    dft_actor(num_vis, num_minor_cycle, source_list_2_3__sources__3,
         output_dft_0__vis_uvw_coords__14, num_sources_in_2_3__num_sources__3, output_dft_0__config__14,
         visibilities__v2__14); // delta_3_dft_run_2_dft_actor_0
 
-    dft_actor(981120/*NUM_VISIBILITIES*/, 200/*NUM_MAX_SOURCES*/, source_list_3_3__sources__3,
+    dft_actor(num_vis, num_minor_cycle, source_list_3_3__sources__3,
         output_dft_0__vis_uvw_coords__15, num_sources_in_3_3__num_sources__3, output_dft_0__config__15,
         visibilities__v2__15); // delta_3_dft_run_3_dft_actor_0
 
@@ -4032,7 +4040,7 @@ void* computationThread_Core0(void *arg) {
 		PREESM_MD5_Update(&preesm_md5_ctx_save_2__psf__2,(char *)save_2__psf__2, 33554432);
 		#endif
 
-    add_visibilities(981120/*NUM_VISIBILITIES*/, add_0_0__v1__2, visibilities__v2__12, output__input__12); // delta_3_add_visibilities_0
+    add_visibilities(num_vis, add_0_0__v1__2, visibilities__v2__12, output__input__12); // delta_3_add_visibilities_0
 
     // Broadcast delta_3_Broadcast_added_vis_0
 
@@ -4043,9 +4051,9 @@ void* computationThread_Core0(void *arg) {
       memcpy(subtract_1__visibilities_in__12 + 0, output__input__12 + 0, 15697920); // 981120 * PRECISION2
     }
 
-    add_visibilities(981120/*NUM_VISIBILITIES*/, add_0__v1__9, visibilities__v2__13, output__input__13); // delta_3_add_visibilities_1
+    add_visibilities(num_vis, add_0__v1__9, visibilities__v2__13, output__input__13); // delta_3_add_visibilities_1
 
-    subtract_from_measurements(512/*NUM_RECEIVERS*/, 130816/*NUM_BASELINES*/, 981120/*NUM_VISIBILITIES*/,
+    subtract_from_measurements(num_receivers, num_baselines, num_vis,
         visibilities_0__measured_vis__3, subtract_1__visibilities_in__12, gains_out__gains__12,
         receiver_pairs_0_3__receiver_pairs__3, output2_1__config__17, visibilities_out__visibilities__12); // delta_3_subtraction_run_0_subtraction_0
 
@@ -4058,9 +4066,9 @@ void* computationThread_Core0(void *arg) {
       memcpy(subtract_1__visibilities_in__13 + 0, output__input__13 + 0, 15697920); // 981120 * PRECISION2
     }
 
-    add_visibilities(981120/*NUM_VISIBILITIES*/, add_0__v1__10, visibilities__v2__14, output__input__14); // delta_3_add_visibilities_2
+    add_visibilities(num_vis, add_0__v1__10, visibilities__v2__14, output__input__14); // delta_3_add_visibilities_2
 
-    subtract_from_measurements(512/*NUM_RECEIVERS*/, 130816/*NUM_BASELINES*/, 981120/*NUM_VISIBILITIES*/,
+    subtract_from_measurements(num_receivers, num_baselines, num_vis,
         visibilities_1__measured_vis__3, subtract_1__visibilities_in__13, gains_out__gains__13,
         receiver_pairs_1_3__receiver_pairs__3, output2_1__config__18, visibilities_out__visibilities__13); // delta_3_subtraction_run_1_subtraction_0
 
@@ -4073,9 +4081,9 @@ void* computationThread_Core0(void *arg) {
       memcpy(subtract_1__visibilities_in__14 + 0, output__input__14 + 0, 15697920); // 981120 * PRECISION2
     }
 
-    add_visibilities(981120/*NUM_VISIBILITIES*/, add_0__v1__11, visibilities__v2__15, output__input__15); // delta_3_add_visibilities_3
+    add_visibilities(num_vis, add_0__v1__11, visibilities__v2__15, output__input__15); // delta_3_add_visibilities_3
 
-    subtract_from_measurements(512/*NUM_RECEIVERS*/, 130816/*NUM_BASELINES*/, 981120/*NUM_VISIBILITIES*/,
+    subtract_from_measurements(num_receivers, num_baselines, num_vis,
         visibilities_2__measured_vis__3, subtract_1__visibilities_in__14, gains_out__gains__14,
         receiver_pairs_2_3__receiver_pairs__3, output2_1__config__19, visibilities_out__visibilities__14); // delta_3_subtraction_run_2_subtraction_0
 
@@ -4088,26 +4096,26 @@ void* computationThread_Core0(void *arg) {
       memcpy(subtract_1__visibilities_in__15 + 0, output__input__15 + 0, 15697920); // 981120 * PRECISION2
     }
 
-    subtract_from_measurements(512/*NUM_RECEIVERS*/, 130816/*NUM_BASELINES*/, 981120/*NUM_VISIBILITIES*/,
+    subtract_from_measurements(num_receivers, num_baselines, num_vis,
         visibilities_3__measured_vis__3, subtract_1__visibilities_in__15, gains_out__gains__15,
         receiver_pairs_3_3__receiver_pairs__3, output2_1__config__20, visibilities_out__visibilities__15); // delta_3_subtraction_run_3_subtraction_0
 
-    gridding_actor(grid_size/*GRID_SIZE*/, 981120/*NUM_VISIBILITIES*/, 17/*NUM_KERNELS*/, 108800/*TOTAL_KERNEL_SAMPLES*/,
+    gridding_actor(grid_size/*GRID_SIZE*/, num_vis, num_kernels, total_kernel_samples,
         gridding_kernels_0_3__kernels__3, gridding_kernel_supports_0_3__kernel_supports__3,
         output_gridding_1__vis_uvw_coords__12, visibilities_out__visibilities__12, output_gridding_2__config__12,
         uv_grid__grids_0__3); // delta_3_gridding_run_0_gridding_actor_0
 
-    gridding_actor(grid_size/*GRID_SIZE*/, 981120/*NUM_VISIBILITIES*/, 17/*NUM_KERNELS*/, 108800/*TOTAL_KERNEL_SAMPLES*/,
+    gridding_actor(grid_size/*GRID_SIZE*/, num_vis, num_kernels, total_kernel_samples,
         gridding_kernels_1_3__kernels__3, gridding_kernel_supports_1_3__kernel_supports__3,
         output_gridding_1__vis_uvw_coords__13, visibilities_out__visibilities__13, output_gridding_2__config__13,
         uv_grid__grids_1__3); // delta_3_gridding_run_1_gridding_actor_0
 
-    gridding_actor(grid_size/*GRID_SIZE*/, 981120/*NUM_VISIBILITIES*/, 17/*NUM_KERNELS*/, 108800/*TOTAL_KERNEL_SAMPLES*/,
+    gridding_actor(grid_size/*GRID_SIZE*/, num_vis, num_kernels, total_kernel_samples,
         gridding_kernels_2_3__kernels__3, gridding_kernel_supports_2_3__kernel_supports__3,
         output_gridding_1__vis_uvw_coords__14, visibilities_out__visibilities__14, output_gridding_2__config__14,
         uv_grid__grids_2__3); // delta_3_gridding_run_2_gridding_actor_0
 
-    gridding_actor(grid_size/*GRID_SIZE*/, 981120/*NUM_VISIBILITIES*/, 17/*NUM_KERNELS*/, 108800/*TOTAL_KERNEL_SAMPLES*/,
+    gridding_actor(grid_size/*GRID_SIZE*/, num_vis, num_kernels, total_kernel_samples,
         gridding_kernels_3_3__kernels__3, gridding_kernel_supports_3_3__kernel_supports__3,
         output_gridding_1__vis_uvw_coords__15, visibilities_out__visibilities__15, output_gridding_2__config__15,
         uv_grid__grids_3__3); // delta_3_gridding_run_3_gridding_actor_0
@@ -4181,19 +4189,19 @@ void* computationThread_Core0(void *arg) {
       memcpy(save_1__model__3 + 0, output_model__input__3 + 0, 33554432); // 4194304 * PRECISION
     }
 
-    dft_actor(981120/*NUM_VISIBILITIES*/, 200/*NUM_MAX_SOURCES*/, source_list_0_3__sources__4,
+    dft_actor(num_vis, num_minor_cycle, source_list_0_3__sources__4,
         output_dft_0__vis_uvw_coords__16, num_sources_in_0_3__num_sources__4, output_dft_0__config__16,
         visibilities__v2__16); // delta_4_dft_run_0_dft_actor_0
 
-    dft_actor(981120/*NUM_VISIBILITIES*/, 200/*NUM_MAX_SOURCES*/, source_list_1_3__sources__4,
+    dft_actor(num_vis, num_minor_cycle, source_list_1_3__sources__4,
         output_dft_0__vis_uvw_coords__17, num_sources_in_1_3__num_sources__4, output_dft_0__config__17,
         visibilities__v2__17); // delta_4_dft_run_1_dft_actor_0
 
-    dft_actor(981120/*NUM_VISIBILITIES*/, 200/*NUM_MAX_SOURCES*/, source_list_2_3__sources__4,
+    dft_actor(num_vis, num_minor_cycle, source_list_2_3__sources__4,
         output_dft_0__vis_uvw_coords__18, num_sources_in_2_3__num_sources__4, output_dft_0__config__18,
         visibilities__v2__18); // delta_4_dft_run_2_dft_actor_0
 
-    dft_actor(981120/*NUM_VISIBILITIES*/, 200/*NUM_MAX_SOURCES*/, source_list_3_3__sources__4,
+    dft_actor(num_vis, num_minor_cycle, source_list_3_3__sources__4,
         output_dft_0__vis_uvw_coords__19, num_sources_in_3_3__num_sources__4, output_dft_0__config__19,
         visibilities__v2__19); // delta_4_dft_run_3_dft_actor_0
 
@@ -4211,7 +4219,7 @@ void* computationThread_Core0(void *arg) {
 		PREESM_MD5_Update(&preesm_md5_ctx_save_2__psf__3,(char *)save_2__psf__3, 33554432);
 		#endif
 
-    add_visibilities(981120/*NUM_VISIBILITIES*/, add_0_0__v1__3, visibilities__v2__16, output__input__16); // delta_4_add_visibilities_0
+    add_visibilities(num_vis, add_0_0__v1__3, visibilities__v2__16, output__input__16); // delta_4_add_visibilities_0
 
     // Broadcast delta_4_Broadcast_added_vis_0
 
@@ -4222,9 +4230,9 @@ void* computationThread_Core0(void *arg) {
       memcpy(subtract_1__visibilities_in__16 + 0, output__input__16 + 0, 15697920); // 981120 * PRECISION2
     }
 
-    add_visibilities(981120/*NUM_VISIBILITIES*/, add_0__v1__12, visibilities__v2__17, output__input__17); // delta_4_add_visibilities_1
+    add_visibilities(num_vis, add_0__v1__12, visibilities__v2__17, output__input__17); // delta_4_add_visibilities_1
 
-    subtract_from_measurements(512/*NUM_RECEIVERS*/, 130816/*NUM_BASELINES*/, 981120/*NUM_VISIBILITIES*/,
+    subtract_from_measurements(num_receivers, num_baselines, num_vis,
         visibilities_0__measured_vis__4, subtract_1__visibilities_in__16, gains_out__gains__16,
         receiver_pairs_0_3__receiver_pairs__4, output2_1__config__21, visibilities_out__visibilities__16); // delta_4_subtraction_run_0_subtraction_0
 
@@ -4237,9 +4245,9 @@ void* computationThread_Core0(void *arg) {
       memcpy(subtract_1__visibilities_in__17 + 0, output__input__17 + 0, 15697920); // 981120 * PRECISION2
     }
 
-    add_visibilities(981120/*NUM_VISIBILITIES*/, add_0__v1__13, visibilities__v2__18, output__input__18); // delta_4_add_visibilities_2
+    add_visibilities(num_vis, add_0__v1__13, visibilities__v2__18, output__input__18); // delta_4_add_visibilities_2
 
-    subtract_from_measurements(512/*NUM_RECEIVERS*/, 130816/*NUM_BASELINES*/, 981120/*NUM_VISIBILITIES*/,
+    subtract_from_measurements(num_receivers, num_baselines, num_vis,
         visibilities_1__measured_vis__4, subtract_1__visibilities_in__17, gains_out__gains__17,
         receiver_pairs_1_3__receiver_pairs__4, output2_1__config__22, visibilities_out__visibilities__17); // delta_4_subtraction_run_1_subtraction_0
 
@@ -4252,9 +4260,9 @@ void* computationThread_Core0(void *arg) {
       memcpy(subtract_1__visibilities_in__18 + 0, output__input__18 + 0, 15697920); // 981120 * PRECISION2
     }
 
-    add_visibilities(981120/*NUM_VISIBILITIES*/, add_0__v1__14, visibilities__v2__19, output__input__19); // delta_4_add_visibilities_3
+    add_visibilities(num_vis, add_0__v1__14, visibilities__v2__19, output__input__19); // delta_4_add_visibilities_3
 
-    subtract_from_measurements(512/*NUM_RECEIVERS*/, 130816/*NUM_BASELINES*/, 981120/*NUM_VISIBILITIES*/,
+    subtract_from_measurements(num_receivers, num_baselines, num_vis,
         visibilities_2__measured_vis__4, subtract_1__visibilities_in__18, gains_out__gains__18,
         receiver_pairs_2_3__receiver_pairs__4, output2_1__config__23, visibilities_out__visibilities__18); // delta_4_subtraction_run_2_subtraction_0
 
@@ -4267,27 +4275,27 @@ void* computationThread_Core0(void *arg) {
       memcpy(subtract_1__visibilities_in__19 + 0, output__input__19 + 0, 15697920); // 981120 * PRECISION2
     }
 
-    subtract_from_measurements(512/*NUM_RECEIVERS*/, 130816/*NUM_BASELINES*/, 981120/*NUM_VISIBILITIES*/,
+    subtract_from_measurements(num_receivers, num_baselines, num_vis,
         visibilities_3__measured_vis__4, subtract_1__visibilities_in__19, gains_out__gains__19,
         receiver_pairs_3_3__receiver_pairs__4, output2_1__config__24, visibilities_out__visibilities__19); // delta_4_subtraction_run_3_subtraction_0
 
     fifoPush(add_0_0__add_0__0, FIFO_Head_delta_end_out_Broadcast_added_vis_add__delta_ini__0, 15697920, NULL, 0); // 15697920 * char
-    gridding_actor(grid_size/*GRID_SIZE*/, 981120/*NUM_VISIBILITIES*/, 17/*NUM_KERNELS*/, 108800/*TOTAL_KERNEL_SAMPLES*/,
+    gridding_actor(grid_size/*GRID_SIZE*/, num_vis, num_kernels, total_kernel_samples,
         gridding_kernels_0_3__kernels__4, gridding_kernel_supports_0_3__kernel_supports__4,
         output_gridding_1__vis_uvw_coords__16, visibilities_out__visibilities__16, output_gridding_2__config__16,
         uv_grid__grids_0__4); // delta_4_gridding_run_0_gridding_actor_0
 
-    gridding_actor(grid_size/*GRID_SIZE*/, 981120/*NUM_VISIBILITIES*/, 17/*NUM_KERNELS*/, 108800/*TOTAL_KERNEL_SAMPLES*/,
+    gridding_actor(grid_size/*GRID_SIZE*/, num_vis, num_kernels, total_kernel_samples,
         gridding_kernels_1_3__kernels__4, gridding_kernel_supports_1_3__kernel_supports__4,
         output_gridding_1__vis_uvw_coords__17, visibilities_out__visibilities__17, output_gridding_2__config__17,
         uv_grid__grids_1__4); // delta_4_gridding_run_1_gridding_actor_0
 
-    gridding_actor(grid_size/*GRID_SIZE*/, 981120/*NUM_VISIBILITIES*/, 17/*NUM_KERNELS*/, 108800/*TOTAL_KERNEL_SAMPLES*/,
+    gridding_actor(grid_size/*GRID_SIZE*/, num_vis, num_kernels, total_kernel_samples,
         gridding_kernels_2_3__kernels__4, gridding_kernel_supports_2_3__kernel_supports__4,
         output_gridding_1__vis_uvw_coords__18, visibilities_out__visibilities__18, output_gridding_2__config__18,
         uv_grid__grids_2__4); // delta_4_gridding_run_2_gridding_actor_0
 
-    gridding_actor(grid_size/*GRID_SIZE*/, 981120/*NUM_VISIBILITIES*/, 17/*NUM_KERNELS*/, 108800/*TOTAL_KERNEL_SAMPLES*/,
+    gridding_actor(grid_size/*GRID_SIZE*/, num_vis, num_kernels, total_kernel_samples,
         gridding_kernels_3_3__kernels__4, gridding_kernel_supports_3_3__kernel_supports__4,
         output_gridding_1__vis_uvw_coords__19, visibilities_out__visibilities__19, output_gridding_2__config__19,
         uv_grid__grids_3__4); // delta_4_gridding_run_3_gridding_actor_0
