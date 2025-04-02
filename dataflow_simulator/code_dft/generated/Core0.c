@@ -1544,7 +1544,7 @@ void* computationThread_Core0(void *arg) {
 	int num_baselines = num_receivers*(num_receivers-1)/2;
 	int oversampling_factor = 16;
 	int num_kernels = 17;
-	int total_kernel_samples = 50017280;
+	int total_kernel_samples = 70400;
 
 #ifdef PREESM_MD5_UPDATE
 	PREESM_MD5_CTX preesm_md5_ctx_delta_0__token_in__0;

@@ -5,11 +5,11 @@ import math
 
 def generate_fits(grid_size, num_sources, output_file):
     # Crée une grille avec un bruit de fond gaussien
-    data = np.random.normal(loc=0.0, scale=0.01, size=(grid_size, grid_size))
+    data = np.random.normal(loc=0.0, scale=0.000, size=(grid_size, grid_size))
 
     # Paramètres de la source
     source_amplitude = 12.0   # Intensité de la source
-    source_sigma = 4.0       # Largeur de la gaussienne (en pixels)
+    source_sigma = 18.0       # Largeur de la gaussienne (en pixels)
     
     FOV_DEGREES =1;
     cell_size = (FOV_DEGREES * math.pi) / (180.0 * grid_size)

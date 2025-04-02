@@ -2,6 +2,7 @@ import astropy
 from astropy.io import fits
 import os
 import numpy as np
+import sys
 
 def write_nparr_to_fits(data, filename):
     hdu = fits.PrimaryHDU(data)
@@ -42,10 +43,20 @@ def convert_all_csv_in_directory(input_dir, output_dir, delimiter):
             csv_file_path = os.path.join(input_dir, filename)
             fits_file_path = os.path.join(output_dir, filename.replace('.csv', '.fits'))
             convert_csv_to_fits(csv_file_path, fits_file_path, delimiter)
+    print(f"✅ Converted all CSV files from {input_dir} to {output_dir}")
 
 
 
-input_directory = "small/"
-output_directory = "fits/"
-delimiter = ","
-convert_all_csv_in_directory(input_directory, output_directory, delimiter)
+# Exécution
+if __name__ == "__main__":
+    if len(sys.argv) != 4:
+        print("Usage: python csv_to_fits.py <chemin_du_fichier/dossier_csv> <chemin_du_dossier_fits> <1_or_all>")
+        sys.exit(1)
+    
+    csv_file = sys.argv[1]
+    fits_file = sys.argv[2]
+    what = sys.argv[3]
+    if what=="1":
+        convert_csv_to_fits(csv_file,fits_file,",")
+    else:
+        convert_all_csv_in_directory(csv_file, fits_file, ",")

@@ -191,6 +191,7 @@ typedef struct Config {
 	int num_major_cycles;
 	int num_recievers;
 	int num_baselines;
+	int baseline_max;
 	int grid_size;
 	double cell_size;
 	const char *output_path;

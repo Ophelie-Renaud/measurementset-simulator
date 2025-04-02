@@ -71,16 +71,16 @@ void config_struct_set_up_v2(int GRID_SIZE, int NUM_KERNELS, int NUM_BASELINES, 
 	// load parameter
 	config_struct->num_baselines = NUM_BASELINES;
 	config_struct->num_kernels = NUM_KERNELS;
-	config_struct->total_kernel_samples = 50017280;
+	config_struct->total_kernel_samples = 0;
 	config_struct->grid_size = GRID_SIZE;
 	config_struct->oversampling = OVERSAMPLING_FACTOR;
 
 	// define other constant
-	int fov_degrees = 1;
-	int baseline_max = 100;
+	float fov_degrees = 1;
+	int baseline_max = 1000;
 
 	//
-	config_struct->frequency_hz = 29979.0; // observed frequency --> osef
+	config_struct->frequency_hz = SPEED_OF_LIGHT/0.21; // observed frequency --> osef
 	config_struct->max_w = baseline_max*config_struct->frequency_hz/SPEED_OF_LIGHT;// baseline_max * freq obs /celerite mais osef en fait
 	config_struct->w_scale = pow(NUM_KERNELS - 1, 2.0) / config_struct->max_w;
 	config_struct->cell_size = (fov_degrees * PI) / (180.0 * GRID_SIZE);// lower than 1/2.f_max
@@ -96,21 +96,24 @@ void config_struct_set_up_v2(int GRID_SIZE, int NUM_KERNELS, int NUM_BASELINES, 
 	config_struct->default_gains_file = "data/input/TrueGainsNotRotated.csv";
 	config_struct->output_gains_file = "estimated_gains.csv";
 	config_struct->use_default_gains	= true;
+	config_struct->force_weight_to_one	= true;
 
 	// input files
 	config_struct->visibility_source_file = "../code/vis.csv";
-	/*config_struct->kernel_real_file    = "../code/config/wproj_manualconj_gridding_kernel_supports_x16.csv";
+	config_struct->kernel_real_file    = "../code/config/wproj_manualconj_gridding_kernel_supports_x16.csv";
 	config_struct->kernel_imag_file    = "../code/config/wproj_manualconj_gridding_kernels_imag_x16.csv";
 	config_struct->kernel_support_file = "../code/config/wproj_manualconj_gridding_kernels_real_x16.csv";
 	config_struct->degridding_kernel_support_file = "../code/config/wproj_manualconj_degridding_kernel_supports_x16.csv";
 	config_struct->degridding_kernel_imag_file = "../code/config/wproj_manualconj_degridding_kernels_imag_x16.csv";
-	config_struct->degridding_kernel_real_file= "../code/config/wproj_manualconj_degridding_kernels_real_x16.csv";*/
+	config_struct->degridding_kernel_real_file= "../code/config/wproj_manualconj_degridding_kernels_real_x16.csv";
+
 	config_struct->kernel_real_file    = "data/input/kernels/new/wproj_manualconj_degridding_kernels_real_x16.csv";
 	config_struct->kernel_imag_file    = "data/input/kernels/new/wproj_manualconj_degridding_kernels_imag_x16.csv";
 	config_struct->kernel_support_file = "data/input/kernels/new/wproj_manualconj_degridding_kernel_supports_x16.csv";
 	config_struct->degridding_kernel_real_file    = "data/input/kernels/new/wproj_manualconj_degridding_kernels_real_x16.csv";
 	config_struct->degridding_kernel_imag_file    = "data/input/kernels/new/wproj_manualconj_degridding_kernels_imag_x16.csv";
 	config_struct->degridding_kernel_support_file = "data/input/kernels/new/wproj_manualconj_degridding_kernel_supports_x16.csv";
+
 	config_struct->psf_input_file        = "data/input/psf.csv";
 
 

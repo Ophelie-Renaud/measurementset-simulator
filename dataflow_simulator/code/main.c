@@ -17,12 +17,11 @@ PRECISION2 complex_mult(const PRECISION2 z1, const PRECISION2 z2)
 	return make_float2(z1.x * z2.x - z1.y * z2.y, z1.y * z2.x + z1.x * z2.y);
 }
 
-// Génération d'un nombre aléatoire suivant une distribution gaussienne (normale) avec moyenne 0 et écart-type 1
-double randn(double mean, double stddev) {
-	double u1 = ((double) rand() / RAND_MAX);  // Génère un nombre entre 0 et 1
-	double u2 = ((double) rand() / RAND_MAX);  // Génère un autre nombre entre 0 et 1
-	double z0 = sqrt(-2.0 * log(u1)) * cos(2.0 * M_PI * u2);  // Box-Muller transform
-	return z0 * stddev + mean;  // Transformation pour avoir une moyenne et un écart-type donnés
+float randn(double mean, double stddev) {
+	double u1 = ((double)rand() / RAND_MAX);
+	double u2 = ((double)rand() / RAND_MAX);
+	double z0 = sqrt(-2.0 * log(u1)) * cos(2.0 * M_PI * u2);
+	return (float)(mean + z0 * stddev);
 }
 double rayleigh(double sigma) {
 	double u = (double) rand() / RAND_MAX;
@@ -42,7 +41,7 @@ void std_degridding(int GRID_SIZE, int NUM_VISIBILITIES, int NUM_KERNELS, int TO
 		// Calcul de l'indice w basé sur la coordonnée z des visibilités corrigées
 		int w_idx = (int)(SQRT(ABS(vis_uvw_coords[i].z * config->w_scale)) + 0.5);
 		// we don't care first on w
-		w_idx = 0;
+		//w_idx = 0;
 
 		// Récupère l'épaisseur du noyau et le décalage pour le plan w
 		int half_support = kernel_supports[w_idx].x;
@@ -213,61 +212,54 @@ void convert_vis_to_csv(int NUM_VISIBILITIES, PRECISION2* output_visibilities, P
 }
 
 
-// Fonction pour générer un nombre aléatoire entre min et max
-double random_double(double min, double max) {
-	return min + (rand() / (double)RAND_MAX) * (max - min);
-}
 
-void vis_coord_set_up(int NUM_VISIBILITIES , int GRID_SIZE, int TIMING_SAMPLE, PRECISION3* vis_uvw_coords, Config *config) {
-	// Paramètres pour définir la plage UV
-	const float MAX_UVW =config->max_w;
-	double meters_to_wavelengths = SPEED_OF_LIGHT/config->frequency_hz ; // lambda = c/f
+void vis_coord_set_up(int NUM_VISIBILITIES, int GRID_SIZE, int TIMING_SAMPLE, PRECISION3* vis_uvw_coords, Config *config) {
+    const float MAX_UVW = config->max_w;
+    double meters_to_wavelengths = SPEED_OF_LIGHT / config->frequency_hz;  // Conversion de mètre en longueurs d'onde
 
-	const double sigma = MAX_UVW / 30.0;  // Ajuster selon vos besoins
+    // Paramètres pour définir les cercles concentriques
+    const double sigma = MAX_UVW / 30.0;  // Ajuster selon les besoins
+    int points_per_circle = 10;  // Initialement 10 points par cercle, à ajuster
+    int current_num_points = 0;
 
-	// test 1: Distribution gaussienne autour du centre (phase center) - Box-Muller simple
+    // Disposition des points sur des cercles concentriques
+    for (int r = 1; r <= 10; r++) {  // 10 cercles concentriques
+        double radius = r * MAX_UVW / 10;  // Rayon croissant des cercles
 
-	for (int i = 0; i < NUM_VISIBILITIES; ++i) {
-		// Générer une coordonnée x, y, z suivant une distribution normale
-		vis_uvw_coords[i].x = (float)(rand() % (int)(2 * MAX_UVW + 1)) - MAX_UVW;
-		vis_uvw_coords[i].y = (float)(rand() % (int)(2 * MAX_UVW + 1)) - MAX_UVW;
-		vis_uvw_coords[i].z = (float)(rand() % (int)(2 * MAX_UVW + 1)) - MAX_UVW;
+        // Distribuer les points uniformément sur ce cercle
+        for (int p = 0; p < points_per_circle; p++) {
+            // Angle uniforme autour du cercle
+            double angle = (2.0 * M_PI / points_per_circle) * p;
+            float x = (float)(radius * cos(angle));
+            float y = (float)(radius * sin(angle));
+            float z = (float)randn(0.0, sigma);  // Utilisation de la distribution gaussienne pour z
 
-		// Appliquer une distribution gaussienne avec une plus grande densité autour du centre
-		vis_uvw_coords[i].x = (float)randn(0.0, MAX_UVW);  // Génération d'un nombre aléatoire suivant une loi normale
-		vis_uvw_coords[i].y = (float)randn(0.0, MAX_UVW);
-		vis_uvw_coords[i].z = (float)randn(0.0, MAX_UVW);
+            // Stocke les coordonnées dans vis_uvw_coords
+            vis_uvw_coords[current_num_points].x = x;
+            vis_uvw_coords[current_num_points].y = y;
+            vis_uvw_coords[current_num_points].z = z;
+            current_num_points++;
 
+            if (current_num_points >= NUM_VISIBILITIES) {
+                break;
+            }
+        }
 
-	}
+        // Augmente le nombre de points par cercle à chaque itération (plus de points au centre)
+        points_per_circle += 5;
+        if (current_num_points >= NUM_VISIBILITIES) {
+            break;
+        }
+    }
 
-	// Option 2: autre
-	// Génération aléatoire des positions d'antennes
-	int baseline_max = 1000;
+    // Conversion des coordonnées en longueurs d'onde
+    for (int i = 0; i < current_num_points; i++) {
+        vis_uvw_coords[i].x *= meters_to_wavelengths;
+        vis_uvw_coords[i].y *= meters_to_wavelengths;
+        vis_uvw_coords[i].z *= meters_to_wavelengths;
+    }
 
-	double antennas_x[config->num_baselines], antennas_y[config->num_baselines];
-	double u, v, bx, by, theta;
-	for (int i = 0; i < config->num_baselines; i++) {
-		antennas_x[i] = random_double(-baseline_max, baseline_max);
-		antennas_y[i] = random_double(-baseline_max, baseline_max);
-	}
-	for (int t = 0; t < TIMING_SAMPLE; t++) {
-		theta = (t / (double)TIMING_SAMPLE) * 2.0 * M_PI;
-
-		for (int i = 0; i < config->num_baselines; i++) {
-			for (int j = i + 1; j < config->num_baselines; j++) {
-				bx = antennas_x[j] - antennas_x[i];
-				by = antennas_y[j] - antennas_y[i];
-
-				u = (bx * cos(theta) + by * sin(theta)) / meters_to_wavelengths;
-				v = (-bx * sin(theta) + by * cos(theta)) / meters_to_wavelengths;
-
-				printf("%.2f, %.2f\n", u, v);
-				printf("%.2f, %.2f\n", -u, -v); // Symétrie conjugée
-			}
-		}
-	}
-
+    printf("Points générés : %d\n", current_num_points);
 }
 
 int main(void) {
@@ -275,7 +267,7 @@ int main(void) {
 	int FOV_DEGREES = 1; //champs de vue
 	int NUM_CHANNEL = 1;//nombre de canaux de frequence
 	int NUM_POL = 2;// nombre de polarisation
-	int TIMING_SAMPLE = 100;
+	int TIMING_SAMPLE = 1000;
 
 	int NUM_RECEIVERS = 5;//nombre d'antennes
 	int NUM_BASELINE = NUM_RECEIVERS*(NUM_RECEIVERS-1)/2; // nombre de paire d'antennes
@@ -283,7 +275,7 @@ int main(void) {
 	int GRID_SIZE = 512; // taille de l'image fits "true sky"
 	int NUM_VISIBILITIES = NUM_BASELINE*TIMING_SAMPLE*NUM_CHANNEL*NUM_POL; // greater than (GRID_SIZE/cell_size)²
 	int NUM_KERNEL = 17;//nombre de noyaux de convolution
-	int k = 1000;//GRID_SIZE doit etr au moins 2 fois superieur à la taille du noyau kernel_size = 2*half+1
+	int k = 10;//GRID_SIZE doit etr au moins 2 fois superieur à la taille du noyau kernel_size = 2*half+1
 	int half_support =(int)( (GRID_SIZE/2 -1)/k);
 	int TOTAL_KERNEL_SAMPLES = (int)(pow(2*half_support*OVERSAMPLING_FACTOR,2)*NUM_KERNEL); //c'est recalculé dans le processus mais faut mettre une taille suffisante
 
@@ -320,11 +312,15 @@ int main(void) {
 	}
 
 	config.frequency_hz = SPEED_OF_LIGHT/0.21; // observed frequency --> osef
-	int baseline_max = 100;
-	config.max_w = baseline_max*config.frequency_hz/SPEED_OF_LIGHT;// baseline_max * freq obs /celerite mais osef en fait
+	config.baseline_max = 1000;
+	config.max_w = config.baseline_max*config.frequency_hz/SPEED_OF_LIGHT;// baseline_max * freq obs /celerite mais osef en fait
+	printf("max_w: %.6f\n", config.max_w);
 	config.w_scale = pow(NUM_KERNEL - 1, 2.0) / config.max_w;
+	printf("w_scale: %.6f\n", config.w_scale);
 	config.cell_size = (FOV_DEGREES * M_PI) / (180.0 * GRID_SIZE);// lower than 1/2.f_max
 	config.uv_scale =  config.cell_size*GRID_SIZE;
+
+	printf("uv_scale: %.6f\n", config.uv_scale);
 
 	config.num_baselines = NUM_BASELINE;
 	config.num_kernels = NUM_KERNEL;
@@ -333,9 +329,9 @@ int main(void) {
 	config.visibility_source_file = "vis.csv";
 	config.output_path = "";
 	config.final_image_output = "image.csv";
-	config.degridding_kernel_support_file = "config/wproj_manualconj_degridding_kernel_supports_x16.csv";
-	config.degridding_kernel_imag_file = "config/wproj_manualconj_degridding_kernels_imag_x16.csv";
-	config.degridding_kernel_real_file= "config/wproj_manualconj_degridding_kernels_real_x16.csv";
+	config.degridding_kernel_support_file = "config/w-proj_supports_x16_2458_image.csv";
+	config.degridding_kernel_imag_file = "config/w-proj_kernels_imag_x16_2458_image.csv";
+	config.degridding_kernel_real_file= "config/w-proj_kernels_real_x16_2458_image.csv";
 	config.oversampling = OVERSAMPLING_FACTOR;
 
 
