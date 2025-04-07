@@ -1,6 +1,7 @@
 import numpy as np
 import scipy.special as sp
 import matplotlib.pyplot as plt
+import os
 
 SPEED_OF_LIGHT = 3e8  # Vitesse de la lumière en m/s
 
@@ -11,7 +12,7 @@ def kaiser_bessel_kernel(u, beta, width):
     kernel = np.where(arg > 0, sp.i0(beta * np.sqrt(arg)) / sp.i0(beta), 0)
     return kernel
 
-def generate_gridding_kernel(grid_size, num_kernels, oversampling, kernel_support, beta, width, baseline_max, frequency_hz):
+def generate_kernel(grid_size, num_kernels, oversampling, kernel_support, beta, width, baseline_max, frequency_hz, filepath):
     """ Génère une table de noyaux de gridding en 2D avec ajustement UV selon la fréquence et la baseline."""
     # Calcul de uvw_max
     uvw_max = baseline_max * frequency_hz / SPEED_OF_LIGHT
@@ -28,14 +29,21 @@ def generate_gridding_kernel(grid_size, num_kernels, oversampling, kernel_suppor
     r = np.sqrt(uu**2 + vv**2)
     kernel = kaiser_bessel_kernel(r, beta, width)
     kernel_complex = kernel + 1j * np.zeros_like(kernel)  # Partie réelle et imaginaire
-    return kernel_complex / np.sum(kernel)  # Normalisation
+    kernel_complex = kernel_complex / np.sum(kernel)  # Normalisation
+    plot_real_and_phase(kernel_complex, kernel_support)
+    save_kernel_to_csv(kernel_complex,filepath)
 
 
-def save_kernel_to_csv(kernel, filename_real="kernel_real.csv", filename_imag="kernel_imag.csv", filename_support="kernel_support.csv"):
+def save_kernel_to_csv(kernel,filepath, filename_real="kernel_real.csv", filename_imag="kernel_imag.csv", filename_support="kernel_support.csv"):
     """ Sauvegarde la partie réelle, imaginaire et le support du noyau dans des fichiers CSV """
     real_part = np.real(kernel)
     imag_part = np.imag(kernel)
     support = np.indices(kernel.shape)[0]
+    
+    filename_real = os.path.join(filepath, filename_real)
+    filename_imag = os.path.join(filepath, filename_imag)
+    filename_support = os.path.join(filepath, filename_support)
+    
     
     with open(filename_real, "w") as f_real, open(filename_imag, "w") as f_imag, open(filename_support, "w") as f_support:
         for i in range(kernel.shape[0]):
@@ -46,6 +54,7 @@ def save_kernel_to_csv(kernel, filename_real="kernel_real.csv", filename_imag="k
             f_real.write("\n")
             f_imag.write("\n")
             f_support.write("\n")
+        print(f"✅ Kernel générés et exportés dans {filename_imag},{filename_real} et {filename_support}")
 
 def plot_real_and_phase(kernel,kernel_support, title_real="Real Part", title_phase="Imag Part"):
     """ Affiche la partie réelle et la phase du noyau côte à côte """
@@ -90,8 +99,7 @@ if __name__ == "__main__":
     FREQUENCY_HZ = SPEED_OF_LIGHT/0.21
     
     kernel = generate_gridding_kernel(grid_size, num_kernels, oversampling_factor, kernel_support, BETA, WIDTH, baseline_max, FREQUENCY_HZ)
-    plot_real_and_phase(kernel, kernel_support)
-    save_kernel_to_csv(kernel)
+    
 
 
 
