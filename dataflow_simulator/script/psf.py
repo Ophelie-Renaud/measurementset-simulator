@@ -36,6 +36,9 @@ def generate_psf(grid_size, csv_file, output_csv="psf.csv"):
 
     # Normalisation
     psf /= np.max(psf)
+    
+    # Appliquer l'échelle logarithmique (évite les valeurs nulles pour le log)
+    #psf_log = np.log10(abs(psf) + 1e-6)
 
     # Affichage de la PSF
     plt.figure(figsize=(6, 6))

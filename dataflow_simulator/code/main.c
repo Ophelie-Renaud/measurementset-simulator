@@ -4,12 +4,43 @@
 #include "common.h"
 #include "string.h"
 #include "top.h"
+#include <fftw3.h>
 
 float2 make_float2(float x, float y) {
 	float2 result;
 	result.x = x;
 	result.y = y;
 	return result;
+}
+
+void CUFFT_EXECUTE_FORWARD_C2C_actor(int GRID_SIZE, PRECISION2 *uv_grid_in, PRECISION2 *uv_grid_out)
+{
+	printf("UPDATE >>> Performing FFT...\n\n");
+
+	//memcpy(uv_grid_out, uv_grid_in, sizeof(PRECISION2) * GRID_SIZE * GRID_SIZE);
+	//return;
+
+#if SINGLE_PRECISION
+
+	// Need to link with -lfftw3f instead of or in addition to -lfftw3
+	fftwf_plan fft_plan;
+
+	fft_plan = fftwf_plan_dft_2d(GRID_SIZE, GRID_SIZE, (float (*)[2]) uv_grid_in, (float (*)[2]) uv_grid_out, FFTW_FORWARD, FFTW_ESTIMATE);
+	fftwf_execute(fft_plan);
+	fftwf_destroy_plan(fft_plan);
+
+#else
+
+	fftw_plan fft_plan;
+
+	fft_plan = fftw_plan_dft_2d(GRID_SIZE, GRID_SIZE, (double (*)[2]) uv_grid_in, (double (*)[2]) uv_grid_out, FFTW_FORWARD, FFTW_ESTIMATE);
+	fftw_execute(fft_plan);
+	fftw_destroy_plan(fft_plan);
+#endif
+
+	//memcpy(uv_grid_out, uv_grid_in, sizeof(PRECISION2) * GRID_SIZE * GRID_SIZE);
+
+	//MD5_Update(sizeof(PRECISION2) * GRID_SIZE*GRID_SIZE, uv_grid_out);
 }
 
 PRECISION2 complex_mult(const PRECISION2 z1, const PRECISION2 z2)
@@ -119,14 +150,6 @@ void std_degridding(int GRID_SIZE, int NUM_VISIBILITIES, int NUM_KERNELS, int TO
 		output_visibilities[i].x = comm_norm < 1e-5f ? output_visibilities[i].x / 1e-5f : output_visibilities[i].x / comm_norm;
 		output_visibilities[i].y = comm_norm < 1e-5f ? output_visibilities[i].x / 1e-5f : output_visibilities[i].y / comm_norm;
 
-        // Portion temporaire pour copier directement la valeur de la grille dans la sortie (à commenter une fois que des noyaux corrects sont trouvés)
-        // int x = (int)(grid_pos.x + (PRECISION)grid_center + 0.5);
-		//int y = (int)(grid_pos.y + (PRECISION)grid_center + 0.5);
-
-		//int idx = x + y * GRID_SIZE;
-
-		//output_visibilities[i].x = input_grid[idx].x;
-		//output_visibilities[i].y = input_grid[idx].y;
 	}
 	printf("UPDATE >>> Image degridded successfully\n");
 }
@@ -214,52 +237,38 @@ void convert_vis_to_csv(int NUM_VISIBILITIES, PRECISION2* output_visibilities, P
 
 
 void vis_coord_set_up(int NUM_VISIBILITIES, int GRID_SIZE, int TIMING_SAMPLE, PRECISION3* vis_uvw_coords, Config *config) {
-    const float MAX_UVW = config->max_w;
-    double meters_to_wavelengths = SPEED_OF_LIGHT / config->frequency_hz;  // Conversion de mètre en longueurs d'onde
+	const float MAX_UVW = config->max_w;
+	double meters_to_wavelengths = SPEED_OF_LIGHT / config->frequency_hz;  // Conversion de mètre en longueurs d'onde
 
-    // Paramètres pour définir les cercles concentriques
-    const double sigma = MAX_UVW / 30.0;  // Ajuster selon les besoins
-    int points_per_circle = 10;  // Initialement 10 points par cercle, à ajuster
-    int current_num_points = 0;
+	const double sigma = MAX_UVW / 30.0;  // Dispersion pour l’axe Z
+	int points_per_circle = 10;  // Nombre initial de points par cercle
 
-    // Disposition des points sur des cercles concentriques
-    for (int r = 1; r <= 10; r++) {  // 10 cercles concentriques
-        double radius = r * MAX_UVW / 10;  // Rayon croissant des cercles
+	int current_num_points = 0;
+	int r = 1;
 
-        // Distribuer les points uniformément sur ce cercle
-        for (int p = 0; p < points_per_circle; p++) {
-            // Angle uniforme autour du cercle
-            double angle = (2.0 * M_PI / points_per_circle) * p;
-            float x = (float)(radius * cos(angle));
-            float y = (float)(radius * sin(angle));
-            float z = (float)randn(0.0, sigma);  // Utilisation de la distribution gaussienne pour z
+	while (current_num_points < NUM_VISIBILITIES) {
+		double radius = r * MAX_UVW / 10.0;  // Rayon du cercle
 
-            // Stocke les coordonnées dans vis_uvw_coords
-            vis_uvw_coords[current_num_points].x = x;
-            vis_uvw_coords[current_num_points].y = y;
-            vis_uvw_coords[current_num_points].z = z;
-            current_num_points++;
+		for (int p = 0; p < points_per_circle; p++) {
+			if (current_num_points >= NUM_VISIBILITIES) break;  // Vérification à chaque itération
 
-            if (current_num_points >= NUM_VISIBILITIES) {
-                break;
-            }
-        }
+			double angle = (2.0 * M_PI / points_per_circle) * p;
+			float x = (float)(radius * cos(angle));
+			float y = (float)(radius * sin(angle));
+			float z = (float)randn(0.0, sigma);  // Bruit Gaussien sur Z
 
-        // Augmente le nombre de points par cercle à chaque itération (plus de points au centre)
-        points_per_circle += 5;
-        if (current_num_points >= NUM_VISIBILITIES) {
-            break;
-        }
-    }
+			vis_uvw_coords[current_num_points].x = x * meters_to_wavelengths;
+			vis_uvw_coords[current_num_points].y = y * meters_to_wavelengths;
+			vis_uvw_coords[current_num_points].z = z * meters_to_wavelengths;
 
-    // Conversion des coordonnées en longueurs d'onde
-    for (int i = 0; i < current_num_points; i++) {
-        vis_uvw_coords[i].x *= meters_to_wavelengths;
-        vis_uvw_coords[i].y *= meters_to_wavelengths;
-        vis_uvw_coords[i].z *= meters_to_wavelengths;
-    }
+			current_num_points++;
+		}
 
-    printf("Points générés : %d\n", current_num_points);
+		r++;  // Augmente le rayon
+		points_per_circle += 5;  // Augmente la densité des points
+	}
+
+	printf("Points générés : %d (attendus : %d)\n", current_num_points, NUM_VISIBILITIES);
 }
 
 int main(void) {
@@ -267,7 +276,7 @@ int main(void) {
 	int FOV_DEGREES = 1; //champs de vue
 	int NUM_CHANNEL = 1;//nombre de canaux de frequence
 	int NUM_POL = 2;// nombre de polarisation
-	int TIMING_SAMPLE = 1000;
+	int TIMING_SAMPLE = 100;
 
 	int NUM_RECEIVERS = 5;//nombre d'antennes
 	int NUM_BASELINE = NUM_RECEIVERS*(NUM_RECEIVERS-1)/2; // nombre de paire d'antennes
@@ -288,6 +297,7 @@ int main(void) {
 	int* num_corrected_visibilities = (int*)malloc(sizeof(int) * 1);
 	PRECISION2* output_visibilities = (PRECISION2*)malloc(sizeof(PRECISION2) * NUM_VISIBILITIES);
 	Config config;
+	PRECISION2* uv_grid = (PRECISION2*)malloc(sizeof(PRECISION2) * GRID_SIZE * GRID_SIZE);
 
 
 	//initialize values (pas necessaire mais au cas ou)
@@ -337,6 +347,8 @@ int main(void) {
 
 	load_image_from_file( input_grid, &config);
 
+
+
 	// Affichage des résultats
 	for (int i = 0; i < 5; i++) {
 		printf("Grille d'entrée %d: %.6f + %.6fi\n", i, input_grid[i].x, input_grid[i].y);
@@ -346,6 +358,8 @@ int main(void) {
 
 
 	degridding_kernel_host_set_up( NUM_KERNEL, TOTAL_KERNEL_SAMPLES, &config, kernel_supports,  kernels);
+
+	CUFFT_EXECUTE_FORWARD_C2C_actor(GRID_SIZE, input_grid, uv_grid);
 	// Affichage des résultats
 	for (int i = 0; i < 5; i++) {
 		printf("kernel_supports %d: %d + %di\n", i, kernel_supports[i].x, kernel_supports[i].y);
@@ -361,7 +375,7 @@ int main(void) {
 
 
 
-	std_degridding(GRID_SIZE, NUM_VISIBILITIES, NUM_KERNEL, TOTAL_KERNEL_SAMPLES,OVERSAMPLING_FACTOR, kernels, kernel_supports, input_grid,vis_uvw_coords, num_corrected_visibilities, &config, output_visibilities);
+	std_degridding(GRID_SIZE, NUM_VISIBILITIES, NUM_KERNEL, TOTAL_KERNEL_SAMPLES,OVERSAMPLING_FACTOR, kernels, kernel_supports, uv_grid,vis_uvw_coords, num_corrected_visibilities, &config, output_visibilities);
 
 	// Affichage des résultats
 	for (int i = 0; i < 5; i++) {
