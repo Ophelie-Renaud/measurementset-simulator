@@ -12,6 +12,104 @@ float2 make_float2(float x, float y) {
 	result.y = y;
 	return result;
 }
+int2 make_int2(int x,int y)
+{
+	int2 int2_data;
+
+	int2_data.x=x;
+	int2_data.y=y;
+
+	return(int2_data);
+
+}
+PRECISION2 complex_mult_CPU(const PRECISION2 z1, const PRECISION2 z2)
+{
+	return MAKE_PRECISION2(z1.x * z2.x - z1.y * z2.y, z1.y * z2.x + z1.x * z2.y);
+}
+void gridding_CPU(PRECISION2 *grid, const PRECISION2 *kernel, const int2 *supports,
+                  const PRECISION3 *vis_uvw, const PRECISION2 *vis, const int num_vis, const int oversampling,
+                  const int grid_size, const double uv_scale, const double w_scale)
+{
+    // const unsigned int vis_index = blockIdx.x * blockDim.x + threadIdx.x;
+	//double w_scale_bis = 0.0;
+    // if(vis_index >= num_vis)
+    // 	return;
+    for (unsigned int vis_index = 0; vis_index < num_vis; vis_index++)
+    {
+
+        // Represents index of w-projection kernel in supports array
+        const int plane_index = (int) ROUND(SQRT(ABS(vis_uvw[vis_index].z * w_scale)));
+
+        // Scale visibility uvw into grid coordinate space
+        const PRECISION2 grid_coord = MAKE_PRECISION2(
+                vis_uvw[vis_index].x * uv_scale,
+                vis_uvw[vis_index].y * uv_scale
+        );
+        const int half_grid_size = grid_size / 2;
+        const int half_support = supports[plane_index].x;
+
+        PRECISION conjugate = (vis_uvw[vis_index].z < 0.0) ? -1.0 : 1.0;
+
+        const PRECISION2 snapped_grid_coord = MAKE_PRECISION2(
+                ROUND(grid_coord.x * oversampling) / oversampling,
+                ROUND(grid_coord.y * oversampling) / oversampling
+        );
+
+        const PRECISION2 min_grid_point = MAKE_PRECISION2(
+                CEIL(snapped_grid_coord.x - half_support),
+                CEIL(snapped_grid_coord.y - half_support)
+        );
+
+        const PRECISION2 max_grid_point = MAKE_PRECISION2(
+                FLOOR(snapped_grid_coord.x + half_support),
+                FLOOR(snapped_grid_coord.y + half_support)
+        );
+        // PRECISION2 grid_point = MAKE_PRECISION2(0.0, 0.0);
+        PRECISION2 convolved = MAKE_PRECISION2(0.0, 0.0);
+        PRECISION2 kernel_sample = MAKE_PRECISION2(0.0, 0.0);
+        int2 kernel_uv_index = make_int2(0, 0);
+
+        int grid_index = 0;
+        int kernel_index = 0;
+        int w_kernel_offset = supports[plane_index].y;
+
+        // printf("%lf \t %lf\n", max_grid_point.x - min_grid_point.x, max_grid_point.y - min_grid_point.y);
+
+        for(int grid_v = min_grid_point.y; grid_v <= max_grid_point.y; ++grid_v)
+        {
+        	if(grid_v < -half_grid_size || grid_v >= half_grid_size){
+				continue;
+			}
+
+            kernel_uv_index.y = abs((int)ROUND((grid_v - snapped_grid_coord.y) * oversampling));
+
+            for(int grid_u = min_grid_point.x; grid_u <= max_grid_point.x; ++grid_u)
+            {
+            	if(grid_u < -half_grid_size || grid_u >= half_grid_size){
+					continue;
+				}
+
+                kernel_uv_index.x = abs((int)ROUND((grid_u - snapped_grid_coord.x) * oversampling));
+
+                kernel_index = w_kernel_offset + kernel_uv_index.y * (half_support + 1)
+                                                 * oversampling + kernel_uv_index.x;
+                kernel_sample = MAKE_PRECISION2(kernel[kernel_index].x, kernel[kernel_index].y  * conjugate);
+
+                grid_index = (grid_v + half_grid_size) * grid_size + (grid_u + half_grid_size);
+
+                convolved = complex_mult_CPU(vis[vis_index], kernel_sample);
+
+                grid[grid_index].x += convolved.x;
+                grid[grid_index].y += convolved.y;
+                // atomicAdd(&(grid[grid_index].x), convolved.x);
+                // atomicAdd(&(grid[grid_index].y), convolved.y);
+            }
+        }
+    }
+
+    printf("FINISHED GRIDDING\n");
+}
+
 
 void CUFFT_EXECUTE_FORWARD_C2C_actor(int GRID_SIZE, PRECISION2 *uv_grid_in, PRECISION2 *uv_grid_out)
 {
@@ -41,6 +139,111 @@ void CUFFT_EXECUTE_FORWARD_C2C_actor(int GRID_SIZE, PRECISION2 *uv_grid_in, PREC
 	//memcpy(uv_grid_out, uv_grid_in, sizeof(PRECISION2) * GRID_SIZE * GRID_SIZE);
 
 	//MD5_Update(sizeof(PRECISION2) * GRID_SIZE*GRID_SIZE, uv_grid_out);
+
+	// Normalisation après la FFT
+	for (int i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
+		uv_grid_out[i].x /= GRID_SIZE;
+		uv_grid_out[i].y /= GRID_SIZE;
+
+
+	}
+	for (int i = 0; i < 5; i++) {
+		printf("FFT Value at index %d: %f + %fi\n", i, uv_grid_out[i].x, uv_grid_out[i].y);
+	}
+
+}
+void fft_shift_complex_to_real_actor(int GRID_SIZE, PRECISION2 *uv_grid, Config *config, PRECISION *dirty_image) {
+	int grid_square = GRID_SIZE * GRID_SIZE;
+	int row_index,col_index;
+
+	printf("UPDATE >>> Shifting grid data for FFT...\n\n");
+	// Perform 2D FFT shift back
+	for (row_index = 0; row_index < GRID_SIZE; row_index++)
+	{
+		for (col_index = 0; col_index < GRID_SIZE; col_index++)
+		{
+			int a = 1 - 2 * ((row_index + col_index) & 1);
+			dirty_image[row_index * GRID_SIZE + col_index] = uv_grid[row_index * GRID_SIZE + col_index].x * a;
+		}
+	}
+
+}
+void fft_shift_real_to_complex_actor(int GRID_SIZE, PRECISION *image, Config *config, PRECISION2 *fourier) {
+	int grid_square = GRID_SIZE * GRID_SIZE;
+	int row_index,col_index;
+
+	printf("UPDATE >>> Shifting grid data for FFT...\n\n");
+	// Perform 2D FFT shift back
+	for (row_index = 0; row_index < GRID_SIZE; row_index++)
+	{
+		for (col_index = 0; col_index < GRID_SIZE; col_index++)
+		{
+			int a = 1 - 2 * ((row_index + col_index) & 1);
+			fourier[row_index * GRID_SIZE + col_index].x = image[row_index * GRID_SIZE + col_index] * a;
+			fourier[row_index * GRID_SIZE + col_index].y = 0;
+
+		}
+	}
+	for (row_index = 0; row_index < 5; row_index++) {
+		for (col_index = 0; col_index < 5; col_index++) {
+			printf("Value at (%d, %d): %f\n", row_index, col_index, fourier[row_index * GRID_SIZE + col_index].x);
+
+		}
+	}
+
+	//MD5_Update(sizeof(PRECISION2) * grid_square, fourier);
+}
+void fft_shift_complex_to_complex_actor(int GRID_SIZE, PRECISION2 *uv_grid_in, Config *config, PRECISION2 *uv_grid_out) {
+	int row_index,col_index;
+
+	printf("UPDATE >>> Shifting grid data for FFT...\n\n");
+	// Perform 2D FFT shift
+	for (row_index = 0;row_index < GRID_SIZE; row_index++)
+	{
+		for (col_index = 0; col_index < GRID_SIZE; col_index++)
+		{
+			int a = 1 - 2 * ((row_index + col_index) & 1);
+			uv_grid_out[row_index * GRID_SIZE + col_index].x = uv_grid_in[row_index * GRID_SIZE + col_index].x * a;
+			uv_grid_out[row_index * GRID_SIZE + col_index].y = uv_grid_in[row_index * GRID_SIZE + col_index].y * a;
+		}
+	}
+	//MD5_Update(sizeof(PRECISION2) * GRID_SIZE * GRID_SIZE, uv_grid_out);
+}
+void CUFFT_EXECUTE_INVERSE_C2C_actor(int GRID_SIZE, PRECISION2 *uv_grid_in, PRECISION2 *uv_grid_out)
+{
+	printf("UPDATE >>> Performing iFFT...\n\n");
+
+	//memcpy(uv_grid_out, uv_grid_in, sizeof(PRECISION2) * GRID_SIZE * GRID_SIZE);
+	//return;
+
+	//memset(uv_grid_out, 0, sizeof(PRECISION2) * GRID_SIZE * GRID_SIZE);
+
+#if SINGLE_PRECISION
+
+	// Need to link with -lfftw3f instead of or in addition to -lfftw3
+	fftwf_plan fft_plan;
+
+	fft_plan = fftwf_plan_dft_2d(GRID_SIZE, GRID_SIZE, (float (*)[2]) uv_grid_in, (float (*)[2]) uv_grid_out, FFTW_BACKWARD, FFTW_ESTIMATE);
+	fftwf_execute(fft_plan);
+	fftwf_destroy_plan(fft_plan);
+
+#else
+
+	fftw_plan fft_plan;
+
+	fft_plan = fftw_plan_dft_2d(GRID_SIZE, GRID_SIZE, (double (*)[2]) uv_grid_in, (double (*)[2]) uv_grid_out, FFTW_BACKWARD, FFTW_ESTIMATE);
+	fftw_execute(fft_plan);
+	fftw_destroy_plan(fft_plan);
+#endif
+
+	//memcpy(uv_grid_out, uv_grid_in, sizeof(PRECISION2) * GRID_SIZE * GRID_SIZE);
+
+	// Normalisation après la iFFT
+	for (int i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
+		uv_grid_out[i].x /= GRID_SIZE;
+		uv_grid_out[i].y /= GRID_SIZE;
+	}
+
 }
 
 PRECISION2 complex_mult(const PRECISION2 z1, const PRECISION2 z2)
@@ -155,7 +358,7 @@ void std_degridding(int GRID_SIZE, int NUM_VISIBILITIES, int NUM_KERNELS, int TO
 }
 
 
-void load_image_from_file(PRECISION2 *input_grid, Config* config) {
+void load_image_from_file(PRECISION *input_grid, Config* config) {
 	const char *file_name = config->final_image_output;
 	FILE *f = fopen(file_name, "r");
 	if (f == NULL) {
@@ -164,25 +367,16 @@ void load_image_from_file(PRECISION2 *input_grid, Config* config) {
 		return;
 	}
 
-	// Calcul du nombre d'éléments dans le fichier
-	fseek(f, 0, SEEK_END);
-	long file_size = ftell(f);
-	rewind(f);
-
-	// On suppose qu'il y a un nombre pair de valeurs dans le fichier (x, y)
-	long num_elements = file_size / sizeof(float);  // Nombre total d'éléments (x et y compris)
-
-	if (num_elements % 2 != 0) {
-		printf("Nombre impair de valeurs détecté, suppression du dernier élément.\n");
-		num_elements--;
-	}
-
-	// Lecture des valeurs dans le fichier
 	int i = 0;
-	while (fscanf(f, "%f, %f,", &input_grid[i].x, &input_grid[i].y) == 2) {
+	 while (fscanf(f, "%f%*[, \n]", &input_grid[i]) == 1) {
 		i++;
+		if (i >= 512*512) {
+			printf(">>> WARNING: Too many elements in file, truncating\n");
+			break;
+		}
 	}
-	printf("UPDATE >>> Image loaded from %s\n", file_name);
+	fclose(f);
+	printf("UPDATE >>> Image loaded from %s, %d elements \n\n", file_name, i);
 }
 
 
@@ -231,7 +425,7 @@ void convert_vis_to_csv(int NUM_VISIBILITIES, PRECISION2* output_visibilities, P
 		handle_file_error(file, "Erreur lors de la fermeture du fichier");
 	}
 
-	printf("UPDATE >>> write csv to %s\n", config->visibility_source_file);
+	printf("UPDATE >>> write csv to %s\n\n", config->visibility_source_file);
 }
 
 
@@ -268,20 +462,57 @@ void vis_coord_set_up(int NUM_VISIBILITIES, int GRID_SIZE, int TIMING_SAMPLE, PR
 		points_per_circle += 5;  // Augmente la densité des points
 	}
 
-	printf("Points générés : %d (attendus : %d)\n", current_num_points, NUM_VISIBILITIES);
+	printf("Points de coordonnées de visibilités générés : %d (attendus : %d)\n\n", current_num_points, NUM_VISIBILITIES);
+}
+
+void export_image_to_csv(PRECISION2 *image_grid, int grid_size, const char *output_csv_file) {
+	FILE *f = fopen(output_csv_file, "w");
+	if (f == NULL) {
+		perror(">>> ERROR");
+		printf(">>> ERROR: Unable to open file %s...\n\n", output_csv_file);
+		return;
+	}
+
+	// Écrire les données complexes dans le fichier CSV
+	for (int i = 0; i < grid_size*grid_size; i++) {
+		fprintf(f, "%.6f, %.6f\n", image_grid[i].x, image_grid[i].y); // Partie réelle, partie imaginaire
+	}
+
+	printf("Image saved to CSV: %s\n", output_csv_file);
+
+	// Fermer le fichier
+	fclose(f);
+}
+void export_real_to_csv(PRECISION *image_grid, int grid_size, const char *output_csv_file) {
+	FILE *f = fopen(output_csv_file, "w");
+	if (f == NULL) {
+		perror(">>> ERROR");
+		printf(">>> ERROR: Unable to open file %s...\n\n", output_csv_file);
+		return;
+	}
+
+	// Écrire les données complexes dans le fichier CSV
+	for (int i = 0; i < grid_size*grid_size; i++) {
+		fprintf(f, "%.6f, %.6f\n", image_grid[i], 0.0); // Partie réelle, partie imaginaire
+	}
+
+	printf("Image saved to CSV: %s\n", output_csv_file);
+
+	// Fermer le fichier
+	fclose(f);
 }
 
 int main(void) {
 
 	int FOV_DEGREES = 1; //champs de vue
 	int NUM_CHANNEL = 1;//nombre de canaux de frequence
-	int NUM_POL = 2;// nombre de polarisation
+	int NUM_POL = 1;// nombre de polarisation
 	int TIMING_SAMPLE = 100;
 
 	int NUM_RECEIVERS = 5;//nombre d'antennes
 	int NUM_BASELINE = NUM_RECEIVERS*(NUM_RECEIVERS-1)/2; // nombre de paire d'antennes
 	int OVERSAMPLING_FACTOR = 16; // nombre de fois que les données sont surechantillonée
-	int GRID_SIZE = 512; // taille de l'image fits "true sky"
+	int GRID_SIZE = 64; // taille de l'image fits "true sky"
 	int NUM_VISIBILITIES = NUM_BASELINE*TIMING_SAMPLE*NUM_CHANNEL*NUM_POL; // greater than (GRID_SIZE/cell_size)²
 	int NUM_KERNEL = 17;//nombre de noyaux de convolution
 	int k = 10;//GRID_SIZE doit etr au moins 2 fois superieur à la taille du noyau kernel_size = 2*half+1
@@ -292,19 +523,25 @@ int main(void) {
 
 	PRECISION2* kernels = (PRECISION2*)malloc(sizeof(PRECISION2) * TOTAL_KERNEL_SAMPLES);
 	int2* kernel_supports = (int2*)malloc(sizeof(int2) * NUM_KERNEL);
-	PRECISION2* input_grid = (PRECISION2*)malloc(sizeof(PRECISION2) * GRID_SIZE * GRID_SIZE);
+	PRECISION* input_grid = (PRECISION*)malloc(sizeof(PRECISION) * GRID_SIZE * GRID_SIZE);
+	PRECISION2* input_grid_shift = (PRECISION2*)malloc(sizeof(PRECISION2) * GRID_SIZE * GRID_SIZE);
+
 	PRECISION3* vis_uvw_coords = (PRECISION3*)malloc(sizeof(PRECISION3) * NUM_VISIBILITIES);
 	int* num_corrected_visibilities = (int*)malloc(sizeof(int) * 1);
 	PRECISION2* output_visibilities = (PRECISION2*)malloc(sizeof(PRECISION2) * NUM_VISIBILITIES);
 	Config config;
 	PRECISION2* uv_grid = (PRECISION2*)malloc(sizeof(PRECISION2) * GRID_SIZE * GRID_SIZE);
+	PRECISION2* uv_grid_shift = (PRECISION2*)malloc(sizeof(PRECISION2) * GRID_SIZE * GRID_SIZE);
+	PRECISION2* output_grid = (PRECISION2*)malloc(sizeof(PRECISION2) * GRID_SIZE * GRID_SIZE);
+	PRECISION* output_grid_shift = (PRECISION*)malloc(sizeof(PRECISION) * GRID_SIZE * GRID_SIZE);
+
 
 
 	//initialize values (pas necessaire mais au cas ou)
 
 	memset(kernels, 0, sizeof(PRECISION2)*TOTAL_KERNEL_SAMPLES);
 	memset(kernel_supports, 0, sizeof(int2) * NUM_KERNEL);
-	memset(input_grid, 0, sizeof(PRECISION2) * GRID_SIZE * GRID_SIZE);
+	memset(input_grid, 0, sizeof(PRECISION) * GRID_SIZE * GRID_SIZE);
 	memset(vis_uvw_coords, 0, sizeof(PRECISION3) * NUM_VISIBILITIES);
 	memset(output_visibilities, 0, sizeof(PRECISION2) * NUM_VISIBILITIES);
 
@@ -322,13 +559,13 @@ int main(void) {
 	}
 
 	config.frequency_hz = SPEED_OF_LIGHT/0.21; // observed frequency --> osef
-	config.baseline_max = 1000;
-	config.max_w = config.baseline_max*config.frequency_hz/SPEED_OF_LIGHT;// baseline_max * freq obs /celerite mais osef en fait
+	config.baseline_max = 800;
+	config.max_w = config.baseline_max*config.frequency_hz/SPEED_OF_LIGHT;// baseline_max * freq obs --> define the frequency boundaries
 	printf("max_w: %.6f\n", config.max_w);
 	config.w_scale = pow(NUM_KERNEL - 1, 2.0) / config.max_w;
 	printf("w_scale: %.6f\n", config.w_scale);
 	config.cell_size = (FOV_DEGREES * M_PI) / (180.0 * GRID_SIZE);// lower than 1/2.f_max
-	config.uv_scale =  config.cell_size*GRID_SIZE;
+	config.uv_scale =  1*config.cell_size*GRID_SIZE;
 
 	printf("uv_scale: %.6f\n", config.uv_scale);
 
@@ -344,46 +581,50 @@ int main(void) {
 	config.degridding_kernel_real_file= "config/w-proj_kernels_real_x16_2458_image.csv";
 	config.oversampling = OVERSAMPLING_FACTOR;
 
-
+	// charger le fichier csv correspondant au true sky
 	load_image_from_file( input_grid, &config);
 
 
-
-	// Affichage des résultats
-	for (int i = 0; i < 5; i++) {
-		printf("Grille d'entrée %d: %.6f + %.6fi\n", i, input_grid[i].x, input_grid[i].y);
-	}
-
+	// générer des coordonnées pour simuler les position u,v,w des visbilité
 	vis_coord_set_up(NUM_VISIBILITIES, GRID_SIZE, TIMING_SAMPLE,vis_uvw_coords, &config);
 
-
+	// mise en place des facteur d'échelles
 	degridding_kernel_host_set_up( NUM_KERNEL, TOTAL_KERNEL_SAMPLES, &config, kernel_supports,  kernels);
 
-	CUFFT_EXECUTE_FORWARD_C2C_actor(GRID_SIZE, input_grid, uv_grid);
-	// Affichage des résultats
-	for (int i = 0; i < 5; i++) {
-		printf("kernel_supports %d: %d + %di\n", i, kernel_supports[i].x, kernel_supports[i].y);
-	}
-	for (int i = 0; i < 5; i++) {
-		printf("kernels %d: %.6f + %.6fi\n", i, kernels[i].x, kernels[i].y);
-	}
+	// shift le zero vers le centre du plan image
+	fft_shift_real_to_complex_actor(GRID_SIZE,input_grid,&config,input_grid_shift);
+	export_image_to_csv(input_grid_shift, GRID_SIZE, "input_grid.csv");
 
-	/*for (int i=0;i<NUM_VISIBILITIES;i++) {
-		output_visibilities[i].x = input_grid[i].x;
-		output_visibilities[i].y = input_grid[i].y;
-	}*/
+	// Passage en Fourier (I(l,m)->V(u,v))
+	CUFFT_EXECUTE_FORWARD_C2C_actor(GRID_SIZE, input_grid_shift, uv_grid);
+	export_image_to_csv(uv_grid, GRID_SIZE, "uv_grid.csv");
+
+	// reshift pour centrer sur le plan uv
+	fft_shift_complex_to_complex_actor(GRID_SIZE,uv_grid,&config,uv_grid_shift);
+	export_image_to_csv(uv_grid_shift, GRID_SIZE, "uv_grid_shift.csv");
 
 
 
-	std_degridding(GRID_SIZE, NUM_VISIBILITIES, NUM_KERNEL, TOTAL_KERNEL_SAMPLES,OVERSAMPLING_FACTOR, kernels, kernel_supports, uv_grid,vis_uvw_coords, num_corrected_visibilities, &config, output_visibilities);
+	//degridder standard
+	std_degridding(GRID_SIZE, NUM_VISIBILITIES, NUM_KERNEL, TOTAL_KERNEL_SAMPLES,OVERSAMPLING_FACTOR, kernels, kernel_supports, uv_grid_shift,vis_uvw_coords, num_corrected_visibilities, &config, output_visibilities);
 
-	// Affichage des résultats
-	for (int i = 0; i < 5; i++) {
-		printf("Visibilité %d: %.6f + %.6fi\n", i, output_visibilities[i].x, output_visibilities[i].y);
-	}
 
+	// export csv des visbilité
 	convert_vis_to_csv(NUM_VISIBILITIES,output_visibilities, vis_uvw_coords, &config);
 
+	// gridder standard from generated vis
+	gridding_CPU(uv_grid, kernels, kernel_supports,
+	vis_uvw_coords, output_visibilities, NUM_VISIBILITIES, OVERSAMPLING_FACTOR,
+	GRID_SIZE, config.uv_scale, config.w_scale);
+
+
+	// Reconstruction avec iFFT
+	CUFFT_EXECUTE_INVERSE_C2C_actor(GRID_SIZE, uv_grid, output_grid);
+	export_image_to_csv(output_grid, GRID_SIZE, "reconstructed.csv");
+
+	//
+	fft_shift_complex_to_real_actor(GRID_SIZE,output_grid,&config,output_grid_shift);
+	export_real_to_csv(output_grid_shift, GRID_SIZE, "reconstructed_shift.csv");
 
 	free(kernel_supports);
 	kernel_supports = NULL;
@@ -397,6 +638,24 @@ int main(void) {
 	num_corrected_visibilities = NULL;
 	free(vis_uvw_coords);
 	vis_uvw_coords = NULL;
+	free(uv_grid);
+	uv_grid = NULL;
+	free(uv_grid_shift);
+	uv_grid_shift = NULL;
+	free(output_grid);
+	output_grid = NULL;
+	free(input_grid_shift);
+	input_grid_shift = NULL;
+	free(output_grid_shift);
+	output_grid_shift = NULL;
 
 	return 0;
 }
+
+/*// Affichage des résultats
+for (int i = 0; i < 5; i++) {
+	printf("kernel_supports %d: %d + %di\n", i, kernel_supports[i].x, kernel_supports[i].y);
+}
+for (int i = 0; i < 5; i++) {
+	printf("kernels %d: %.6f + %.6fi\n", i, kernels[i].x, kernels[i].y);
+}*/

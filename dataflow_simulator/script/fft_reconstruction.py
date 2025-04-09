@@ -77,6 +77,10 @@ def reconstruct_image(csv_file, image_size):
     plt.colorbar(label="Intensité")
     plt.title(f"Image reconstruite avec FFT ({image_size}x{image_size})")
     plt.show()
+    
+    # Calcul de l'amplitude maximale
+    amplitude_max = np.max(image)
+    print(f"Amplitude maximale : {amplitude_max}")
 
 
 if __name__ == "__main__":

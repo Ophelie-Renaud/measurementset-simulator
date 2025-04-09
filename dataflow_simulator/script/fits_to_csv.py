@@ -3,13 +3,13 @@ from astropy.io import fits
 import matplotlib.pyplot as plt
 import math
 
-def generate_fits(grid_size, num_sources, output_file):
+def generate_fits(grid_size, num_sources,source_sigma, output_file):
     # Crée une grille avec un bruit de fond gaussien
     data = np.random.normal(loc=0.0, scale=0.000, size=(grid_size, grid_size))
 
     # Paramètres de la source
     source_amplitude = 12.0   # Intensité de la source
-    source_sigma = 18.0       # Largeur de la gaussienne (en pixels)
+    #source_sigma = 18.0       # Largeur de la gaussienne (en pixels)
     
     FOV_DEGREES =1;
     cell_size = (FOV_DEGREES * math.pi) / (180.0 * grid_size)
@@ -75,8 +75,9 @@ if __name__ == "__main__":
     
     grid_size = sys.argv[1]
     num_sources = sys.argv[2]
-    fits_file = sys.argv[3]
-    csv_file = sys.argv[4]
+    sigma = sys.argv[3]
+    fits_file = sys.argv[4]
+    csv_file = sys.argv[5]
 
-    generate_fits(grid_size,num_sources,fits_file)
+    generate_fits(grid_size,num_sources, sigma,fits_file)
     generate_csv(fits_file, csv_file)
