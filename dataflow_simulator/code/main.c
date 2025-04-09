@@ -5,6 +5,8 @@
 #include "string.h"
 #include "top.h"
 #include <fftw3.h>
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
 
 float2 make_float2(float x, float y) {
 	float2 result;
@@ -502,6 +504,40 @@ void export_real_to_csv(PRECISION *image_grid, int grid_size, const char *output
 	fclose(f);
 }
 
+void save_heatmap_png(const float* image, int size, const char* filename) {
+	unsigned char* pixels = malloc(size * size * sizeof(unsigned char));
+	if (!pixels) {
+		fprintf(stderr, "Erreur allocation mémoire heatmap\n");
+		return;
+	}
+
+	// Trouver min/max pour normaliser
+	float min_val = FLT_MAX, max_val = -FLT_MAX;
+	for (int i = 0; i < size * size; ++i) {
+		if (image[i] < min_val) min_val = image[i];
+		if (image[i] > max_val) max_val = image[i];
+	}
+
+	float range = max_val - min_val;
+	if (range == 0.0f) range = 1.0f; // éviter division par zéro
+
+	// Normalisation + conversion en niveaux de gris (0-255)
+	for (int i = 0; i < size * size; ++i) {
+		float norm = (image[i] - min_val) / range;
+		pixels[i] = (unsigned char)(norm * 255.0f);
+	}
+
+	// Sauvegarde PNG
+	int success = stbi_write_png(filename, size, size, 1, pixels, size);
+	if (!success) {
+		fprintf(stderr, "Erreur d'écriture PNG %s\n", filename);
+	} else {
+		printf("✅ PNG sauvegardé : %s\n", filename);
+	}
+
+	free(pixels);
+}
+
 int main(void) {
 
 	int FOV_DEGREES = 1; //champs de vue
@@ -581,38 +617,44 @@ int main(void) {
 	config.degridding_kernel_real_file= "config/w-proj_kernels_real_x16_2458_image.csv";
 	config.oversampling = OVERSAMPLING_FACTOR;
 
-	// charger le fichier csv correspondant au true sky
+	// Lecture d'une image de référence (ciel réel ou simulé) au format CSV.
+	// Cette image représente l'intensité du ciel dans le domaine image (l,m).
 	load_image_from_file( input_grid, &config);
 
 
-	// générer des coordonnées pour simuler les position u,v,w des visbilité
+	// Simulation d'un jeu de visibilités en générant leurs positions dans le plan UVW,
+	// basé sur des paramètres comme le nombre de visibilités et la taille de grille.
 	vis_coord_set_up(NUM_VISIBILITIES, GRID_SIZE, TIMING_SAMPLE,vis_uvw_coords, &config);
 
-	// mise en place des facteur d'échelles
+	// Calcul des facteurs d'échelle et préparation des noyaux utilisés pour
+	// projeter/interpoler les visibilités sur la grille UV.
 	degridding_kernel_host_set_up( NUM_KERNEL, TOTAL_KERNEL_SAMPLES, &config, kernel_supports,  kernels);
 
-	// shift le zero vers le centre du plan image
+	//option: genere png de l'image d'entrée
+	save_heatmap_png(input_grid, GRID_SIZE, "input_heatmap.png");
+
+	// Décalage du centre de l'image (FFT shift) pour que l'origine (0,0) soit au centre.
+	// Utile avant d'appliquer la transformée de Fourier.
 	fft_shift_real_to_complex_actor(GRID_SIZE,input_grid,&config,input_grid_shift);
 	export_image_to_csv(input_grid_shift, GRID_SIZE, "input_grid.csv");
+
 
 	// Passage en Fourier (I(l,m)->V(u,v))
 	CUFFT_EXECUTE_FORWARD_C2C_actor(GRID_SIZE, input_grid_shift, uv_grid);
 	export_image_to_csv(uv_grid, GRID_SIZE, "uv_grid.csv");
 
-	// reshift pour centrer sur le plan uv
+	// Nouvelle opération de shift pour centrer les visibilités dans le plan UV.
 	fft_shift_complex_to_complex_actor(GRID_SIZE,uv_grid,&config,uv_grid_shift);
 	export_image_to_csv(uv_grid_shift, GRID_SIZE, "uv_grid_shift.csv");
 
-
-
-	//degridder standard
+	// Extraction des valeurs de visibilités à des positions précises (u,v,w)
+	// à partir de la grille UV via interpolation (dégridding).
 	std_degridding(GRID_SIZE, NUM_VISIBILITIES, NUM_KERNEL, TOTAL_KERNEL_SAMPLES,OVERSAMPLING_FACTOR, kernels, kernel_supports, uv_grid_shift,vis_uvw_coords, num_corrected_visibilities, &config, output_visibilities);
 
-
-	// export csv des visbilité
+	// Enregistrement des visibilités simulées dans un fichier CSV.
 	convert_vis_to_csv(NUM_VISIBILITIES,output_visibilities, vis_uvw_coords, &config);
 
-	// gridder standard from generated vis
+	// Processus inverse du dégridding : on projette les visibilités reconstruites sur une grille UV.
 	gridding_CPU(uv_grid, kernels, kernel_supports,
 	vis_uvw_coords, output_visibilities, NUM_VISIBILITIES, OVERSAMPLING_FACTOR,
 	GRID_SIZE, config.uv_scale, config.w_scale);
@@ -622,9 +664,10 @@ int main(void) {
 	CUFFT_EXECUTE_INVERSE_C2C_actor(GRID_SIZE, uv_grid, output_grid);
 	export_image_to_csv(output_grid, GRID_SIZE, "reconstructed.csv");
 
-	//
+	// Dernier shift pour recentrer l'image en domaine image + export en CSV et image PNG.
 	fft_shift_complex_to_real_actor(GRID_SIZE,output_grid,&config,output_grid_shift);
 	export_real_to_csv(output_grid_shift, GRID_SIZE, "reconstructed_shift.csv");
+	save_heatmap_png(output_grid_shift, GRID_SIZE, "reconstructed_heatmap.png");
 
 	free(kernel_supports);
 	kernel_supports = NULL;

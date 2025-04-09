@@ -52,12 +52,14 @@ build cmake_object_order_depends_target_STD_DEGRID: phony || .
 build CMakeFiles/STD_DEGRID.dir/main.c.o: C_COMPILER__STD_DEGRID_unscanned_Debug /home/orenaud/Documents/GITHUB/VIS/vis-generator/dataflow_simulator/code/main.c || cmake_object_order_depends_target_STD_DEGRID
   DEP_FILE = CMakeFiles/STD_DEGRID.dir/main.c.o.d
   FLAGS = -g -std=gnu11 -fdiagnostics-color=always
+  INCLUDES = -I/home/orenaud/Documents/GITHUB/VIS/vis-generator/dataflow_simulator/code
   OBJECT_DIR = CMakeFiles/STD_DEGRID.dir
   OBJECT_FILE_DIR = CMakeFiles/STD_DEGRID.dir
 
 build CMakeFiles/STD_DEGRID.dir/top.c.o: C_COMPILER__STD_DEGRID_unscanned_Debug /home/orenaud/Documents/GITHUB/VIS/vis-generator/dataflow_simulator/code/top.c || cmake_object_order_depends_target_STD_DEGRID
   DEP_FILE = CMakeFiles/STD_DEGRID.dir/top.c.o.d
   FLAGS = -g -std=gnu11 -fdiagnostics-color=always
+  INCLUDES = -I/home/orenaud/Documents/GITHUB/VIS/vis-generator/dataflow_simulator/code
   OBJECT_DIR = CMakeFiles/STD_DEGRID.dir
   OBJECT_FILE_DIR = CMakeFiles/STD_DEGRID.dir
 

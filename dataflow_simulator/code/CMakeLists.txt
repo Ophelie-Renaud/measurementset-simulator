@@ -17,4 +17,5 @@ if(NOT FFTW_FOUND)
 endif()
 
 add_executable(STD_DEGRID main.c top.c)
+target_include_directories(STD_DEGRID PRIVATE ${CMAKE_SOURCE_DIR})
 target_link_libraries(STD_DEGRID m fftw3 fftw3f)

@@ -34,47 +34,78 @@ def display_image(image_data, csv_file, space):
     abs_image = np.abs(image_data)
     phase_image = np.angle(image_data)
     
-    # Calcul des valeurs maximales
+    # stat de base
     max_amplitude = np.max(abs_image)
     max_phase = np.max(np.abs(phase_image))
+    mean_amp = np.mean(abs_image)
+    std_amp = np.std(abs_image)
+    mean_phase = np.mean(phase_image)
+    std_phase = np.std(phase_image)
 
     # Création du subplot
-    fig, axs = plt.subplots(1, 2, figsize=(12, 6))  # 1 ligne, 2 colonnes
+    fig, axs = plt.subplots(1, 4, figsize=(15, 4))  # 1 ligne, 2 colonnes
     
     # Si le plan est 'uv', appliquer l'échelle logarithmique
     if space == "uv":
 # Affichage de l'amplitude
         im1 = axs[0].imshow(abs_image, cmap='viridis', origin='lower')
-        axs[0].set_title(f"Plan UV - Amplitude : {csv_file}\n max: {max_amplitude:.2f}")
+        axs[0].set_title(f"Amplitude : {csv_file}\n max: {max_amplitude:.2f},\n mean: {mean_amp:.2f}, std: {std_amp:.2f}")
         axs[0].set_xlabel("u")
         axs[0].set_ylabel("v")
         fig.colorbar(im1, ax=axs[0], label='Amplitude')
 
         # Affichage de la phase
         im2 = axs[1].imshow(phase_image, cmap='viridis', origin='lower')
-        axs[1].set_title(f"Plan UV - Phase : {csv_file}\n max: {max_phase:.2f}")
+        axs[1].set_title(f"Phase : {csv_file}\n max: {max_phase:.2f},\n mean: {mean_phase:.2f}, std: {std_phase:.2f}")
         axs[1].set_xlabel("u")
         axs[1].set_ylabel("v")
         fig.colorbar(im2, ax=axs[1], label='Phase')
     else:
 # Affichage de l'amplitude
         im1 = axs[0].imshow(abs_image, cmap='viridis', origin='lower')
-        axs[0].set_title(f"Plan LM - Amplitude : {csv_file}\n max: {max_amplitude:.2f}")
+        axs[0].set_title(f"Amplitude : {csv_file}\n max: {max_amplitude:.2f},\n mean: {mean_amp:.2f}, std: {std_amp:.2f}")
         axs[0].set_xlabel("l")
         axs[0].set_ylabel("m")
         fig.colorbar(im1, ax=axs[0], label='Amplitude')
 
         # Affichage de la phase
         im2 = axs[1].imshow(phase_image, cmap='viridis', origin='lower')
-        axs[1].set_title(f"Plan LM - Phase : {csv_file}\n max: {max_phase:.2f}")
+        axs[1].set_title(f"Phase : {csv_file}\n max: {max_phase:.2f},\n mean: {mean_phase:.2f}, std: {std_phase:.2f}")
         axs[1].set_xlabel("l")
         axs[1].set_ylabel("m")
         fig.colorbar(im2, ax=axs[1], label='Phase')
 
-
     plt.xlabel("u" if space == "uv" else "l")
     plt.ylabel("v" if space == "uv" else "m")
+    
+    # Histogrammes
+    axs[2].hist(abs_image.ravel(), bins=50, color='blue', alpha=0.7)
+    axs[2].set_xlabel('Amplitude')
+    axs[2].set_ylabel('Nombre de pixels')
+
+    axs[3].hist(phase_image.ravel(), bins=50, color='orange', alpha=0.7)
+    axs[3].set_xlabel('Phase (radians)')
+    axs[3].set_ylabel('Nombre de pixels')
+    
+
+    plt.tight_layout()
     plt.show()
+    
+    center_y = image_data.shape[0] // 2
+    amp_profile = abs_image[center_y, :]
+    phase_profile = phase_image[center_y, :]
+
+    fig_profile, axs_profile = plt.subplots(1, 2, figsize=(10, 1))
+    axs_profile[0].plot(amp_profile, label='Amplitude')
+    axs_profile[0].set_title('Profil amplitude (ligne centrale)')
+    axs_profile[0].set_ylabel('Amplitude')
+
+    axs_profile[1].plot(phase_profile, label='Phase', color='green')
+    axs_profile[1].set_title('Profil phase (ligne centrale)')
+    axs_profile[1].set_ylabel('Phase (rad)')
+    axs_profile[1].set_xlabel('Position horizontale (pixels)')
+
+
 
 if __name__ == "__main__":
     if len(sys.argv) != 4:
