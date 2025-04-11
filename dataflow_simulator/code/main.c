@@ -146,12 +146,8 @@ void CUFFT_EXECUTE_FORWARD_C2C_actor(int GRID_SIZE, PRECISION2 *uv_grid_in, PREC
 	for (int i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
 		uv_grid_out[i].x /= GRID_SIZE;
 		uv_grid_out[i].y /= GRID_SIZE;
-
-
 	}
-	for (int i = 0; i < 5; i++) {
-		printf("FFT Value at index %d: %f + %fi\n", i, uv_grid_out[i].x, uv_grid_out[i].y);
-	}
+
 
 }
 void fft_shift_complex_to_real_actor(int GRID_SIZE, PRECISION2 *uv_grid, Config *config, PRECISION *dirty_image) {
@@ -186,12 +182,7 @@ void fft_shift_real_to_complex_actor(int GRID_SIZE, PRECISION *image, Config *co
 
 		}
 	}
-	for (row_index = 0; row_index < 5; row_index++) {
-		for (col_index = 0; col_index < 5; col_index++) {
-			printf("Value at (%d, %d): %f\n", row_index, col_index, fourier[row_index * GRID_SIZE + col_index].x);
 
-		}
-	}
 
 	//MD5_Update(sizeof(PRECISION2) * grid_square, fourier);
 }
@@ -543,7 +534,7 @@ int main(void) {
 	int FOV_DEGREES = 1; //champs de vue
 	int NUM_CHANNEL = 1;//nombre de canaux de frequence
 	int NUM_POL = 1;// nombre de polarisation
-	int TIMING_SAMPLE = 100;
+	int TIMING_SAMPLE = 500;
 
 	int NUM_RECEIVERS = 5;//nombre d'antennes
 	int NUM_BASELINE = NUM_RECEIVERS*(NUM_RECEIVERS-1)/2; // nombre de paire d'antennes

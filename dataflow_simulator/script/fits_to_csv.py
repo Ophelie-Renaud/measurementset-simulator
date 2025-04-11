@@ -42,6 +42,7 @@ def generate_fits(grid_size, num_sources,source_sigma, output_file):
     # Sauvegarde le fichier FITS
     hdul.writeto(output_file, overwrite=True)
     print(f"Fichier FITS généré : {output_file}")
+    print("Max pos in true sky:", np.unravel_index(np.argmax(data), data.shape))
 
     # Affiche l'image
     plt.figure(figsize=(6, 6))

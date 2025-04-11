@@ -50,6 +50,11 @@ void CUFFT_EXECUTE_INVERSE_C2C_actor(int GRID_SIZE, PRECISION2 *uv_grid_in, PREC
     //memcpy(uv_grid_out, uv_grid_in, sizeof(PRECISION2) * GRID_SIZE * GRID_SIZE);
 
     MD5_Update(sizeof(PRECISION2) * GRID_SIZE*GRID_SIZE, uv_grid_out);
+	// Normalisation après la iFFT
+	/*for (int i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
+		uv_grid_out[i].x /= GRID_SIZE;
+		uv_grid_out[i].y /= GRID_SIZE;
+	}*/
 }
 
 void CUFFT_EXECUTE_FORWARD_C2C_actor(int GRID_SIZE, PRECISION2 *uv_grid_in, PRECISION2 *uv_grid_out)
@@ -80,6 +85,12 @@ void CUFFT_EXECUTE_FORWARD_C2C_actor(int GRID_SIZE, PRECISION2 *uv_grid_in, PREC
     //memcpy(uv_grid_out, uv_grid_in, sizeof(PRECISION2) * GRID_SIZE * GRID_SIZE);
 
     MD5_Update(sizeof(PRECISION2) * GRID_SIZE*GRID_SIZE, uv_grid_out);
+
+	// Normalisation après la FFT
+	/*for (int i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
+		uv_grid_out[i].x /= GRID_SIZE;
+		uv_grid_out[i].y /= GRID_SIZE;
+	}*/
 }
 
 

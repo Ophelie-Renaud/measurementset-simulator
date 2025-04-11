@@ -51,6 +51,7 @@ def reconstruct_image(csv_file, image_size):
     u, v = df_cleaned["u"], df_cleaned["v"]
     visibilities = df_cleaned["real"] + 1j * df_cleaned["im"]
 
+
     # Définir la grille de reconstruction
     grid = np.zeros((image_size, image_size), dtype=np.complex64)
 
@@ -61,6 +62,9 @@ def reconstruct_image(csv_file, image_size):
     # Éviter la division par zéro
     u_norm = np.zeros_like(u, dtype=int) if u_max == u_min else ((u - u_min) / (u_max - u_min) * (image_size - 1)).astype(int)
     v_norm = np.zeros_like(v, dtype=int) if v_max == v_min else ((v - v_min) / (v_max - v_min) * (image_size - 1)).astype(int)
+    
+    u_norm = np.round(u_norm).astype(int)
+    v_norm = np.round(v_norm).astype(int)
 
     # Remplir la grille avec les visibilités (approximation par discrétisation)
     for i in range(len(u)):
@@ -69,7 +73,10 @@ def reconstruct_image(csv_file, image_size):
     # Appliquer la transformée de Fourier inverse
     image = np.fft.ifftshift(grid)  # Recentre les basses fréquences
     image = np.fft.ifft2(image)  # Transformée de Fourier inverse
+    #image *= (image_size)  # test de normalisation
     image = np.abs(image)  # Module de l'image reconstruite
+    
+    #image = image * (image_size)
 
     # Afficher l'image reconstruite
     plt.figure(figsize=(6,6))
@@ -78,6 +85,9 @@ def reconstruct_image(csv_file, image_size):
     plt.title(f"Image reconstruite avec FFT ({image_size}x{image_size})")
     plt.show()
     
+    print("Max vis:", np.max(np.abs(visibilities)))
+    print("Sum vis:", np.sum(np.abs(visibilities)))
+    print("Max grid:", np.max(np.abs(grid)))
     # Calcul de l'amplitude maximale
     amplitude_max = np.max(image)
     print(f"Amplitude maximale : {amplitude_max}")
